@@ -1,0 +1,77 @@
+# + kubectl get service/nginx-ingress -n nginx-ingress -o yaml
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"nginx-ingress","namespace":"nginx-ingress"},"spec":{"externalTrafficPolicy":"Local","ports":[{"name":"http","port":80,"protocol":"TCP","targetPort":80},{"name":"https","port":443,"protocol":"TCP","targetPort":443}],"selector":{"app":"nginx-ingress"},"type":"LoadBalancer"}}
+  creationTimestamp: "2020-10-16T06:06:22Z"
+  managedFields:
+    - apiVersion: v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:status:
+          f:loadBalancer:
+            f:ingress: {}
+      manager: controller
+      operation: Update
+      time: "2020-10-16T06:06:22Z"
+    - apiVersion: v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:metadata:
+          f:annotations:
+            .: {}
+            f:kubectl.kubernetes.io/last-applied-configuration: {}
+        f:spec:
+          f:externalTrafficPolicy: {}
+          f:ports:
+            .: {}
+            k:{"port":80,"protocol":"TCP"}:
+              .: {}
+              f:name: {}
+              f:port: {}
+              f:protocol: {}
+              f:targetPort: {}
+            k:{"port":443,"protocol":"TCP"}:
+              .: {}
+              f:name: {}
+              f:port: {}
+              f:protocol: {}
+              f:targetPort: {}
+          f:selector:
+            .: {}
+            f:app: {}
+          f:sessionAffinity: {}
+          f:type: {}
+      manager: kubectl-client-side-apply
+      operation: Update
+      time: "2020-10-16T06:06:22Z"
+  name: nginx-ingress
+  namespace: nginx-ingress
+  resourceVersion: "735028"
+  selfLink: /api/v1/namespaces/nginx-ingress/services/nginx-ingress
+  uid: 76cdf8d9-ef7e-492b-8164-b3680b4849ab
+spec:
+  clusterIP: 10.111.32.207
+  externalTrafficPolicy: Local
+  healthCheckNodePort: 30068
+  ports:
+    - name: http
+      nodePort: 31490
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    - name: https
+      nodePort: 31020
+      port: 443
+      protocol: TCP
+      targetPort: 443
+  selector:
+    app: nginx-ingress
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer:
+    ingress:
+      - ip: 192.168.56.10

@@ -24,7 +24,7 @@ provider "google" {
 }
 
 resource "google_compute_instance" "vm_instance" {
-  name         = "terraform-instance"
+  name         = "kubemaster"
   machine_type = "f1-micro"
 
   boot_disk {

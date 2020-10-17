@@ -36,6 +36,7 @@ curl <EXTERNAL-IP>
 
 
 # ingress crontroller
+<<<<<<< HEAD
 # check option: https://cert-manager.io/docs/tutorials/acme/ingress/
 # la opción del link anterior muestra un external LB, probar.
 
@@ -43,12 +44,18 @@ curl <EXTERNAL-IP>
 # NGINX option ( USER DAEMON SET )
 https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/
 
+=======
+# ( USER DAEMON SET )
+https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/
+
+>>>>>>> 662e527a5d4d3cf1cdd08c547e8fcdfc3f89f3bf
 # sa - rbac - secrets - cm - deploy
 kubectl apply -f common/ns-and-sa.yaml
 kubectl apply -f rbac/rbac.yaml
 kubectl apply -f common/default-server-secret.yaml
 kubectl apply -f common/nginx-config.yaml
 kubectl apply -f daemon-set/nginx-ingress.yaml
+<<<<<<< HEAD
 
 # cert manager (use helm)
 https://cert-manager.io/docs/installation/kubernetes/
@@ -58,6 +65,20 @@ https://cert-manager.io/docs/installation/kubernetes/
 
 
 
+=======
+
+# APP deploy, svc, ingress
+ka app/deployment.yaml
+ka app/ingress.yaml
+ka app/clusterIP.yaml
+
+curl -I <klab.ranchertest.tk>
+status 200 !!!!!!!!!!!!
+
+
+# cert manager
+https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-with-cert-manager-on-digitalocean-kubernetes-es
+>>>>>>> 662e527a5d4d3cf1cdd08c547e8fcdfc3f89f3bf
 
 # APP deploy, svc, ingress
 # check option: https://kubernetes.io/docs/concepts/services-networking/ingress/

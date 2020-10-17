@@ -40,17 +40,23 @@ curl <EXTERNAL-IP>
 https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/
 
 # sa - rbac - secrets - cm - deploy
+kubectl apply -f common/ns-and-sa.yaml
+kubectl apply -f rbac/rbac.yaml
+kubectl apply -f common/default-server-secret.yaml
+kubectl apply -f common/nginx-config.yaml
+kubectl apply -f daemon-set/nginx-ingress.yaml
 
-# ingress
+# APP deploy, svc, ingress
+ka app/deployment.yaml
+ka app/ingress.yaml
+ka app/clusterIP.yaml
+
+curl -I <klab.ranchertest.tk>
+status 200 !!!!!!!!!!!!
 
 
-# deploy
-
-# service ClusterIP
-
-
-# NodePort (extra test)
-
+# cert manager
+https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-with-cert-manager-on-digitalocean-kubernetes-es
 
 
 

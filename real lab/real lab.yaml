@@ -5,7 +5,9 @@
 # alias
 https://github.com/ahmetb/kubectl-aliases
 
-# metalLB
+#
+# metalLB ( solo on-prem)
+#
 https://metallb.universe.tf/installation/
 
 # get ip range from nodes: ej: 10.128.0.20-10.128.0.25
@@ -17,19 +19,33 @@ $(openssl rand -base64 128)
 kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey=<paste>
 
 # config map
-ka metalLB-cm.yaml
+ka metalLB/metalLB-cm.yaml
 
+# check: running pods
+kubectl get pods -n metallb-system
+
+# testing
+kubectl apply -f metalLB/tester.yaml
+kg svc
+
+curl <EXTERNAL-IP>
+# result: <title>Welcome to nginx!</title>
+
+# external loadBalancer (extra)
+# install nginx and config
+
+
+# ingress crontroller
+
+# ingress
 
 # deploy
 
 # service ClusterIP
 
-# ingress
-
-# ingress crontroller
 
 # NodePort (extra test)
 
 
 
-# external loadBalancer (extra)
+

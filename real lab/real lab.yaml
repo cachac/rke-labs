@@ -1,0 +1,35 @@
+#
+# instalation with RKE (1 master-2ram, 2 workers-1ram, metallb + nginx LB-0.5ram)
+#
+
+# alias
+https://github.com/ahmetb/kubectl-aliases
+
+# metalLB
+https://metallb.universe.tf/installation/
+
+# get ip range from nodes: ej: 10.128.0.20-10.128.0.25
+# install by manifest
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.4/manifests/namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.4/manifests/metallb.yaml
+# On first install only copy rand and paste
+$(openssl rand -base64 128)
+kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey=<paste>
+
+# config map
+ka metalLB-cm.yaml
+
+
+# deploy
+
+# service ClusterIP
+
+# ingress
+
+# ingress crontroller
+
+# NodePort (extra test)
+
+
+
+# external loadBalancer (extra)

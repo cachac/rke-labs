@@ -28,7 +28,7 @@ spec:
           containerPort: 443
           hostPort: 443
         - name: readiness-port
-          containerPort: 8081
+          containerPort: 8080
        #- name: prometheus
          #containerPort: 9113
         readinessProbe:

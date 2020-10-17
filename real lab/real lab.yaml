@@ -36,8 +36,13 @@ curl <EXTERNAL-IP>
 
 
 # ingress crontroller
+# ( USER DAEMON SET )
+https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/
+
+# sa - rbac - secrets - cm - deploy
 
 # ingress
+
 
 # deploy
 

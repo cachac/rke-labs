@@ -28,9 +28,8 @@ echo -e "password\npassword\n" | passwd ${username}
 su ${username}
 sudo chmod 600 /home/${username}/.ssh/id_rsa*
 sudo chown ${username}:${username} /home/${username}/.ssh/id_rsa*
-sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no ${username}@${node_internal_ip}
-sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no ${username}@${node_public_ip}
-
+sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_internal_ip}
+#sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no ${username}@${node_public_ip}
 # sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no cachac6@10.0.0.2
 
 # launch rke

@@ -4,6 +4,9 @@ export DEBIAN_FRONTEND=noninteractive
 curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
 sudo usermod -aG docker ${username}
 # ???
-newgrp docker
+#newgrp docker
 
-# ${register_command} --etcd --controlplane --worker
+privateIP=$(curl -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/rke-network/ip)
+
+${register_command} --address ${public_ip} --internal-address $privateIP --etcd --controlplane --worker
+

@@ -121,6 +121,9 @@ resource "google_compute_instance" "rke_server" {
       {
         docker_version = var.docker_version
         username       = local.node_username
+				//
+				register_command = module.rancher_common.custom_cluster_command
+        public_ip        = google_compute_address.rkeexternaladdress.address
       }
     )
   }
@@ -144,25 +147,26 @@ resource "google_compute_instance" "rke_server" {
 #
 # Rancher
 #
+# provider "rke" {
+#   log_file = "rke_debug.log"
+# }
 
-module "rancher_common" {
-  source = "../rancher-common"
+# Provision RKE cluster on provided infrastructure
+resource "rke_cluster" "rancher_cluster" {
+  cluster_name = "quickstart-rancher-server"
 
-  node_public_ip         = google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip
-  node_internal_ip       = google_compute_instance.rke_server.network_interface.0.network_ip
-  node_username          = local.node_username
-  ssh_private_key_pem    = tls_private_key.global_key.private_key_pem
-  rke_kubernetes_version = var.rke_kubernetes_version
+  nodes {
+    address          = var.node_public_ip
+    internal_address = var.node_internal_ip
+    user             = var.node_username
+    role             = ["controlplane", "etcd", "worker"]
+    ssh_key          = var.ssh_private_key_pem
+  }
 
-  cert_manager_version = var.cert_manager_version
-  rancher_version      = var.rancher_version
-
-  rancher_server_dns = join(".", ["rancher", google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip, "xip.io"])
-  admin_password     = var.rancher_server_admin_password
-
-  workload_kubernetes_version = var.workload_kubernetes_version
-  workload_cluster_name       = "auto-rke-gcp"
+  kubernetes_version = var.rke_kubernetes_version
 }
+
+
 
 
 

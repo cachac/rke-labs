@@ -54,6 +54,8 @@ ingress:
   options:
     use-forwarded-headers: "true"' >> /home/${username}/rancher-cluster.yml
 
+sudo chmod 600 /home/${username}/rancher-cluster.yml
+sudo chown ${username}:${username} /home/${username}/rancher-cluster.yml
 # cluster up
 rke up --config /home/${username}/rancher-cluster.yml
 # config

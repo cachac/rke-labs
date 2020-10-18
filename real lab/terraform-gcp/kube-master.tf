@@ -48,15 +48,15 @@ resource "google_compute_subnetwork" "rke_subnet" {
 resource "google_compute_address" "rkeinternaladdress" {
   name         = "rkeinternaladdress"
   subnetwork   = google_compute_subnetwork.rke_subnet.id
-  address_type = "INTERNAL"
-  address      = "10.0.0.2"
+  # address_type = "INTERNAL"
+  # address      = "10.0.0.2"
   region       = var.gcp_region
 }
 
 resource "google_compute_address" "rkeexternaladdress" {
   name = "rkeexternaladdress"
-	address_type = "INTERNAL"
-  address      = "35.224.234.6"
+	# address_type = "EXTERNAL"
+  # address      = "35.224.234.6"
   region       = var.gcp_region
 }
 
@@ -104,9 +104,6 @@ resource "google_compute_instance" "rke_server" {
   # preemptible = true
 
   boot_disk {
-    # initialize_params {
-    #   image = data.google_compute_image.rke_master_image.self_link
-    # }
     source = google_compute_disk.rke_master_disk.id
   }
 
@@ -118,7 +115,7 @@ resource "google_compute_instance" "rke_server" {
   }
 
   metadata = {
-    ssh-keys = "ubuntu:${tls_private_key.global_key.public_key_openssh}"
+    ssh-keys = "cachac6:${tls_private_key.global_key.public_key_openssh}"
     user-data = templatefile(
       join("/", [path.module, "userdata_rancher_server.template"]),
       {
@@ -143,6 +140,31 @@ resource "google_compute_instance" "rke_server" {
     }
   }
 }
+
+#
+# Rancher
+#
+
+module "rancher_common" {
+  source = "../rancher-common"
+
+  node_public_ip         = google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip
+  node_internal_ip       = google_compute_instance.rke_server.network_interface.0.network_ip
+  node_username          = local.node_username
+  ssh_private_key_pem    = tls_private_key.global_key.private_key_pem
+  rke_kubernetes_version = var.rke_kubernetes_version
+
+  cert_manager_version = var.cert_manager_version
+  rancher_version      = var.rancher_version
+
+  rancher_server_dns = join(".", ["rancher", google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip, "xip.io"])
+  admin_password     = var.rancher_server_admin_password
+
+  workload_kubernetes_version = var.workload_kubernetes_version
+  workload_cluster_name       = "auto-rke-gcp"
+}
+
+
 
 
 

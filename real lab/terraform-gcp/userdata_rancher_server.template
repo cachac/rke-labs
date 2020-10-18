@@ -25,11 +25,11 @@ sudo apt-get install sshpass
 ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ""
 sudo -i
 echo -e "password\npassword\n" | passwd ${username}
-exit
+su ${username}
 sudo chmod 600 id_rsa*
 sudo chown ${username}:${username} id_rsa*
 sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no ${username}@${node_internal_ip}
-ssh -o StrictHostKeyChecking=no ${username}@${node_internal_ip}
+sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no ${username}@${node_public_ip}
 
 # launch rke
 echo '

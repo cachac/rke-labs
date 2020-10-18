@@ -35,8 +35,6 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission   = "0600"
 }
 
-
-
 # Networking
 resource "google_compute_network" "rke_network" {
   name = "rke-network"
@@ -61,7 +59,6 @@ resource "google_compute_address" "rke_external_address" {
   name   = "rke-external-address"
   region = var.gcp_region
 }
-
 
 # ********** WARNING **********
 # Firewall Rule to allow all traffic

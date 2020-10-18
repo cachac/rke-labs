@@ -19,6 +19,9 @@ sudo chmod +x /usr/local/bin/rke
 # copy ssh between nodes
 sudo sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
 sudo sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
+# sudo sed -i 's/***/PermitRootLogin without-password/g' /etc/ssh/sshd_config
+echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
+
 sudo systemctl reload sshd
 # copy ssh key's
 sudo apt-get install sshpass
@@ -27,6 +30,8 @@ echo -e "password\npassword\n" | passwd
 
 sshpass -p "password" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}
 sshpass -p "password" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_internal_ip}
+sshpass -p "password" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@34.71.24.97
+
 # sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no ${username}@${node_public_ip}
 # sudo sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@10.0.0.2
 # sudo sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@34.71.24.97

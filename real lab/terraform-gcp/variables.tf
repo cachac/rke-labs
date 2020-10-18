@@ -73,7 +73,7 @@ variable "rancher_server_admin_password" {
 
 # Local variables used to reduce repetition
 locals {
-  node_username = "cachac6"
+  node_username = "root"
 }
 
 variable "administrator_ssh" {

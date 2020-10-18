@@ -1,4 +1,6 @@
 # https://www.terraform.io/docs/providers/google/guides/getting_started.html
+# check: RKE PROVISIONER https://registry.terraform.io/providers/rancher/rke/latest/docs/resources/cluster
+
 # credentials:
 # install gcloud...
 # gcloud auth login
@@ -33,6 +35,8 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission   = "0600"
 }
 
+
+
 # Networking
 resource "google_compute_network" "rke_network" {
   name = "rke-network"
@@ -46,15 +50,15 @@ resource "google_compute_subnetwork" "rke_subnet" {
 }
 
 resource "google_compute_address" "rke_internal_address" {
-  name       = "rke-internal-address"
-  subnetwork = google_compute_subnetwork.rke_subnet.id
+  name         = "rke-internal-address"
+  subnetwork   = google_compute_subnetwork.rke_subnet.id
   address_type = "INTERNAL"
   address      = "10.0.0.2"
-  region = var.gcp_region
+  region       = var.gcp_region
 }
 
 resource "google_compute_address" "rke_external_address" {
-  name = "rke-external-address"
+  name   = "rke-external-address"
   region = var.gcp_region
 }
 
@@ -108,35 +112,12 @@ resource "google_compute_instance" "rke_server" {
   network_interface {
     network    = google_compute_network.rke_network.id
     subnetwork = google_compute_subnetwork.rke_subnet.id
-    network_ip    = google_compute_address.rke_internal_address.address
+    network_ip = google_compute_address.rke_internal_address.address
 
     access_config {
       nat_ip = google_compute_address.rke_external_address.address
     }
   }
-
-
-  # provisioner "remote-exec" {
-  #   inline = [
-  #     "sudo adduser --disabled-password --gecos '' cachac6",
-  #     "sudo mkdir -p /home/cachac6/.ssh",
-  #     "sudo touch /home/cachac6/.ssh/authorized_keys",
-  #     "sudo echo '${var.administrator_ssh}' > authorized_keys",
-  #     "sudo mv authorized_keys /home/cachac6/.ssh",
-  #     "sudo chown -R cachac6:cachac6 /home/cachac6/.ssh",
-  #     "sudo chmod 700 /home/cachac6/.ssh",
-  #     "sudo chmod 600 /home/cachac6/.ssh/authorized_keys",
-  #     "sudo usermod -aG sudo cachac6"
-  #   ]
-
-  #   connection {
-  #     type        = "ssh"
-  #     host        = self.network_interface.0.access_config.0.nat_ip
-  #     user        = local.node_username
-  #     private_key = tls_private_key.global_key.private_key_pem
-  #   }
-
-  # }
 
   metadata = {
     ssh-keys = var.administrator_ssh
@@ -148,6 +129,9 @@ resource "google_compute_instance" "rke_server" {
         username         = local.node_username
         node_internal_ip = google_compute_address.rke_internal_address.address
         node_public_ip   = google_compute_address.rke_external_address.address
+        # ssh_public_key   = var.ssh_public_key_pem
+        # ssh_private_key  = var.ssh_private_key_pem
+        # kubectl_alias    = var.kubectl_alias
       }
     )
   }

@@ -77,11 +77,11 @@ locals {
 }
 
 variable "administrator_ssh" {
-  type        = "string"
+  type        = string
   description = "public ssh key for the admin"
 }
 
-variable "administrator_ssh_keypath" {
-  type        = "string"
-  description = "path to ssh private key"
-}
+# variable "administrator_ssh_keypath" {
+#   type        = "string"
+#   description = "path to ssh private key"
+# }

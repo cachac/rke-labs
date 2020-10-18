@@ -13,20 +13,30 @@ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
 echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update
 sudo apt-get install -y kubectl
-export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml
-echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
 # rke
 sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
 sudo chmod +x /usr/local/bin/rke
 # copy ssh between nodes
-# ssh-copy-id cachac6@10.142.0.2
+sudo sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+sudo sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
+sudo systemctl reload sshd
+# copy ssh key's
+sudo apt-get install sshpass
+ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ""
+sudo -i
+echo -e "password\npassword\n" | passwd ${username}
+exit
+sudo chmod 600 id_rsa*
+sudo chown ${username}:${username} id_rsa*
+sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no ${username}@${node_internal_ip}
+ssh -o StrictHostKeyChecking=no ${username}@${node_internal_ip}
 
 # launch rke
 echo '
 nodes:
   - address: ${node_public_ip}
     internal_address: ${node_internal_ip}
-    user: cachac6
+    user: ${username}
     role: [controlplane, worker, etcd]
 
 services:
@@ -44,6 +54,11 @@ ingress:
 
 # cluster up
 rke up --config /home/${username}/rancher-cluster.yml
+# config
+export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml
+echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
+echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
+echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
 
 
 

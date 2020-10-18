@@ -1,5 +1,50 @@
 #!/bin/bash -x
 
 export DEBIAN_FRONTEND=noninteractive
+# docker
 curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
 sudo usermod -aG docker ${username}
+
+# kubectl
+sudo apt-get update && sudo apt-get install -y apt-transport-https
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubectl
+export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml
+echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bash.rc
+# rke
+sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
+sudo chmod +x /usr/local/bin/rke
+# copy ssh between nodes
+# ssh-copy-id cachac6@10.142.0.2
+
+# launch rke
+echo '
+nodes:
+  - address: ${node_public_ip}
+    internal_address: ${node_internal_ip}
+    user: cachac6
+    role: [controlplane, worker, etcd]
+
+services:
+  etcd:
+    snapshot: true
+    creation: 6h
+    retention: 24h
+
+# Required for external TLS termination with
+# ingress-nginx v0.22+
+ingress:
+  provider: nginx
+  options:
+    use-forwarded-headers: "true"' >> f.y rancher-cluster.yml
+
+# cluster up
+rke up --config ./rancher-cluster.yml
+
+
+
+
+
+

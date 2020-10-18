@@ -46,18 +46,18 @@ resource "google_compute_subnetwork" "rke_subnet" {
 }
 
 resource "google_compute_address" "rkeinternaladdress" {
-  name         = "rkeinternaladdress"
-  subnetwork   = google_compute_subnetwork.rke_subnet.id
+  name       = "rkeinternaladdress"
+  subnetwork = google_compute_subnetwork.rke_subnet.id
   # address_type = "INTERNAL"
   # address      = "10.0.0.2"
-  region       = var.gcp_region
+  region = var.gcp_region
 }
 
 resource "google_compute_address" "rkeexternaladdress" {
   name = "rkeexternaladdress"
-	# address_type = "EXTERNAL"
+  # address_type = "EXTERNAL"
   # address      = "35.224.234.6"
-  region       = var.gcp_region
+  region = var.gcp_region
 }
 
 
@@ -114,13 +114,39 @@ resource "google_compute_instance" "rke_server" {
     }
   }
 
+
+  # provisioner "remote-exec" {
+  #   inline = [
+  #     "sudo adduser --disabled-password --gecos '' cachac6",
+  #     "sudo mkdir -p /home/cachac6/.ssh",
+  #     "sudo touch /home/cachac6/.ssh/authorized_keys",
+  #     "sudo echo '${var.administrator_ssh}' > authorized_keys",
+  #     "sudo mv authorized_keys /home/cachac6/.ssh",
+  #     "sudo chown -R cachac6:cachac6 /home/cachac6/.ssh",
+  #     "sudo chmod 700 /home/cachac6/.ssh",
+  #     "sudo chmod 600 /home/cachac6/.ssh/authorized_keys",
+  #     "sudo usermod -aG sudo cachac6"
+  #   ]
+
+  #   connection {
+  #     type        = "ssh"
+  #     host        = self.network_interface.0.access_config.0.nat_ip
+  #     user        = local.node_username
+  #     private_key = tls_private_key.global_key.private_key_pem
+  #   }
+
+  # }
+
   metadata = {
-    ssh-keys = "cachac6:${tls_private_key.global_key.public_key_openssh}"
+    ssh-keys = var.administrator_ssh
+    // "cachac6:${tls_private_key.global_key.public_key_openssh}"
     user-data = templatefile(
       join("/", [path.module, "userdata_rancher_server.template"]),
       {
-        docker_version = var.docker_version
-        username       = local.node_username
+        docker_version   = var.docker_version
+        username         = local.node_username
+        node_internal_ip = google_compute_instance.rke_server.network_interface.0.network_ip
+        node_public_ip   = google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip
       }
     )
   }
@@ -139,6 +165,23 @@ resource "google_compute_instance" "rke_server" {
       private_key = tls_private_key.global_key.private_key_pem
     }
   }
+
+  # provisioner "remote-exec" {
+  #   inline = [
+  #     "curl -sL https://releases.rancher.com/install-docker/${var.docker_version}.sh | sh && sudo usermod -a -G docker  ${local.node_username}",
+  #     # "sudo docker run -d --restart=unless-stopped -p 80:80 -p 443:443 rancher/rancher:latest"
+  #     "sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64",
+  #     "sudo chmod +x /usr/local/bin/rke",
+  #     "rke --version"
+  #   ]
+
+  #   connection {
+  #     type        = "ssh"
+  #     host        = self.network_interface.0.access_config.0.nat_ip
+  #     user        = local.node_username
+  #     private_key = tls_private_key.global_key.private_key_pem
+  #   }
+  # }
 }
 
 #

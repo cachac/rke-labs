@@ -22,15 +22,14 @@ sudo sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_c
 sudo systemctl reload sshd
 # copy ssh key's
 sudo apt-get install sshpass
-ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ""
-sudo -i
-echo -e "password\npassword\n" | passwd ${username}
-su ${username}
-sudo chmod 600 /home/${username}/.ssh/id_rsa*
-sudo chown ${username}:${username} /home/${username}/.ssh/id_rsa*
-sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_internal_ip}
-#sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no ${username}@${node_public_ip}
-# sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no cachac6@10.0.0.2
+ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""
+echo -e "password\npassword\n" | passwd
+
+sshpass -p "password" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}
+sshpass -p "password" ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_internal_ip}
+# sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no ${username}@${node_public_ip}
+# sudo sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@10.0.0.2
+# sudo sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@34.71.24.97
 
 # launch rke
 echo '
@@ -51,17 +50,15 @@ services:
 ingress:
   provider: nginx
   options:
-    use-forwarded-headers: "true"' >> /home/${username}/rancher-cluster.yml
+    use-forwarded-headers: "true"' >> ~/rancher-cluster.yml
 
-sudo chmod 600 /home/${username}/rancher-cluster.yml
-sudo chown ${username}:${username} /home/${username}/rancher-cluster.yml
 # cluster up
-rke up --config /home/${username}/rancher-cluster.yml
+rke up --config ~/rancher-cluster.yml
 # config
 export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml
-echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
-echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
-echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
+echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> ~/.bashrc
+echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> ~/.bashrc
+echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> ~/.bashrc
 
 
 

@@ -121,9 +121,6 @@ resource "google_compute_instance" "rke_server" {
       {
         docker_version = var.docker_version
         username       = local.node_username
-				//
-				register_command = module.rancher_common.custom_cluster_command
-        public_ip        = google_compute_address.rkeexternaladdress.address
       }
     )
   }
@@ -147,24 +144,26 @@ resource "google_compute_instance" "rke_server" {
 #
 # Rancher
 #
+# https://www.youtube.com/watch?v=YNCq-prI8-8&feature=youtu.be
+
 # provider "rke" {
 #   log_file = "rke_debug.log"
 # }
 
 # Provision RKE cluster on provided infrastructure
-resource "rke_cluster" "rancher_cluster" {
-  cluster_name = "quickstart-rancher-server"
+# resource "rke_cluster" "rancher_cluster" {
+#   cluster_name = "quickstart-rancher-server"
 
-  nodes {
-    address          = var.node_public_ip
-    internal_address = var.node_internal_ip
-    user             = var.node_username
-    role             = ["controlplane", "etcd", "worker"]
-    ssh_key          = var.ssh_private_key_pem
-  }
+#   nodes {
+#     address          = var.node_public_ip
+#     internal_address = var.node_internal_ip
+#     user             = var.node_username
+#     role             = ["controlplane", "etcd", "worker"]
+#     ssh_key          = var.ssh_private_key_pem
+#   }
 
-  kubernetes_version = var.rke_kubernetes_version
-}
+#   kubernetes_version = var.rke_kubernetes_version
+# }
 
 
 

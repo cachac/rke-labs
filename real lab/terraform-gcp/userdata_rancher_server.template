@@ -1,10 +1,12 @@
 #!/bin/bash -x
 
 export DEBIAN_FRONTEND=noninteractive
+# root
+sudo usermod -aG sudo ${username}
 # docker
 curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
 sudo usermod -aG docker ${username}
-
+newgrp docker
 # kubectl
 sudo apt-get update && sudo apt-get install -y apt-transport-https
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
@@ -12,7 +14,7 @@ echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/
 sudo apt-get update
 sudo apt-get install -y kubectl
 export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml
-echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bash.rc
+echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
 # rke
 sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
 sudo chmod +x /usr/local/bin/rke
@@ -38,10 +40,10 @@ services:
 ingress:
   provider: nginx
   options:
-    use-forwarded-headers: "true"' >> f.y rancher-cluster.yml
+    use-forwarded-headers: "true"' >> /home/${username}/rancher-cluster.yml
 
 # cluster up
-rke up --config ./rancher-cluster.yml
+rke up --config /home/${username}/rancher-cluster.yml
 
 
 

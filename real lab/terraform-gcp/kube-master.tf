@@ -45,18 +45,16 @@ resource "google_compute_subnetwork" "rke_subnet" {
   network       = google_compute_network.rke_network.id
 }
 
-resource "google_compute_address" "rkeinternaladdress" {
-  name       = "rkeinternaladdress"
+resource "google_compute_address" "rke_internal_address" {
+  name       = "rke-internal-address"
   subnetwork = google_compute_subnetwork.rke_subnet.id
-  # address_type = "INTERNAL"
-  # address      = "10.0.0.2"
+  address_type = "INTERNAL"
+  address      = "10.0.0.2"
   region = var.gcp_region
 }
 
-resource "google_compute_address" "rkeexternaladdress" {
-  name = "rkeexternaladdress"
-  # address_type = "EXTERNAL"
-  # address      = "35.224.234.6"
+resource "google_compute_address" "rke_external_address" {
+  name = "rke-external-address"
   region = var.gcp_region
 }
 
@@ -108,9 +106,12 @@ resource "google_compute_instance" "rke_server" {
   }
 
   network_interface {
-    network = google_compute_network.rke_network.id
+    network    = google_compute_network.rke_network.id
+    subnetwork = google_compute_subnetwork.rke_subnet.id
+    network_ip    = google_compute_address.rke_internal_address.address
+
     access_config {
-      nat_ip = google_compute_address.rkeexternaladdress.address
+      nat_ip = google_compute_address.rke_external_address.address
     }
   }
 
@@ -145,8 +146,8 @@ resource "google_compute_instance" "rke_server" {
       {
         docker_version   = var.docker_version
         username         = local.node_username
-        node_internal_ip = google_compute_instance.rke_server.network_interface.0.network_ip
-        node_public_ip   = google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip
+        node_internal_ip = google_compute_address.rke_internal_address.address
+        node_public_ip   = google_compute_address.rke_external_address.address
       }
     )
   }

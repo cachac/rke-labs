@@ -17,9 +17,9 @@ sudo apt-get install -y kubectl
 sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
 sudo chmod +x /usr/local/bin/rke
 # copy ssh between nodes
-sudo sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
-sudo sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
-sudo systemctl reload sshd
+#sudo sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+#sudo sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
+#sudo systemctl reload sshd
 # copy ssh key's
 sudo apt-get install sshpass
 ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ""

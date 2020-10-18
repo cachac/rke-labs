@@ -99,9 +99,6 @@ resource "google_compute_instance" "rke_server" {
     env = "dev"
   }
 
-  # if need preemptible VM (24h)
-  # preemptible = true
-
   boot_disk {
     source = google_compute_disk.rke_master_disk.id
   }
@@ -114,6 +111,12 @@ resource "google_compute_instance" "rke_server" {
     access_config {
       nat_ip = google_compute_address.rke_external_address.address
     }
+  }
+
+  scheduling {
+    # if need preemptible VM (24h)
+    automatic_restart = false
+		preemptible = true
   }
 
   metadata = {

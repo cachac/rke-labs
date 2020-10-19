@@ -30,8 +30,9 @@ ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ""
 chmod 600 /home/${username}/.ssh/id_rsa*
 chown ${username}:${username} /home/${username}/.ssh/id_rsa*
 echo -e "password\npassword\n" | passwd ${username}
-sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}
-# sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@34.71.24.97
+# su cachac6
+runuser -l ${username} -c 'sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}'
+# runuser -l cachac6 -c 'sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@34.71.24.97'
 # sed -i 's/root@rke-master/${username}@rke-master/g' /home/${username}/.ssh/id_rsa.pub
 
 # launch rke
@@ -56,7 +57,7 @@ ingress:
     use-forwarded-headers: "true"' >> /home/${username}/rancher-cluster.yml
 
 # # cluster up
-rke up --config /home/${username}/rancher-cluster.yml
+runuser -l ${username} -c 'rke up --config /home/${username}/rancher-cluster.yml'
 
 # config
 export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml

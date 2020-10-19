@@ -1,14 +1,14 @@
-# # disk
-# resource "google_compute_disk" "rke_node_disk" {
-#   name  = "master-disk"
-#   image = data.google_compute_image.rke_master_image.self_link
-#   size  = 10
-#   type  = "pd-ssd"
-#   zone  = var.gcp_zone
-#   labels = {
-#     env = "dev"
-#   }
-# }
+# disk
+resource "google_compute_disk" "rke_node_disk" {
+  name  = "master-disk"
+  image = data.google_compute_image.rke_master_image.self_link
+  size  = 10
+  type  = "pd-standard"
+  zone  = var.gcp_zone
+  labels = {
+    env = "dev"
+  }
+}
 
 # # GCP Compute Instance for creating a single node RKE cluster and installing the Rancher server
 # resource "google_compute_instance" "rke_node" {

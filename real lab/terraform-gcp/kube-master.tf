@@ -122,7 +122,7 @@ resource "google_compute_instance" "rke_server" {
 
   metadata = {
     # ssh-keys = var.administrator_ssh
-    ssh-keys = "cachac6:${tls_private_key.global_key.public_key_openssh}",
+    ssh-keys = "${local.node_username}:${tls_private_key.global_key.public_key_openssh}",
     user-data = templatefile(
       join("/", [path.module, "userdata_rancher_server.template"]),
       {
@@ -135,6 +135,18 @@ resource "google_compute_instance" "rke_server" {
         # kubectl_alias    = var.kubectl_alias
       }
     )
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/.kubectl_aliases"
+    destination = "/home/cachac6/.kubectl_aliases"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
   }
 
   provisioner "remote-exec" {

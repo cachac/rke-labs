@@ -1,29 +1,16 @@
-# Kubernetes provider
-provider "k8s" {
-  host = "10.0.0.2"
-	# rke_cluster.rancher_cluster.api_server_url
+# RKE resources
 
-  client_certificate     = rke_cluster.rancher_cluster.client_cert
-  client_key             = rke_cluster.rancher_cluster.client_key
-  cluster_ca_certificate = rke_cluster.rancher_cluster.ca_crt
+# Provision RKE cluster on provided infrastructure
+resource "rke_cluster" "rancher_cluster" {
+  cluster_name = "quickstart-rancher-server"
 
-  load_config_file = false
-}
-
-# Configure RKE provider
-provider "rke" {
-  log_file = "rke_debug.log"
-}
-# Create a new RKE cluster using arguments
-resource "rke_cluster" "foo2" {
   nodes {
-    address = "10.0.0.2"
-    user    = "cachac6"
-    role    = ["controlplane", "worker", "etcd"]
-    ssh_key = file("~/.ssh/id_rsa")
+    address          = var.node_public_ip
+    internal_address = var.node_internal_ip
+    user             = var.node_username
+    role             = ["controlplane", "etcd", "worker"]
+    ssh_key          = var.ssh_private_key_pem
   }
-  upgrade_strategy {
-      drain = true
-      max_unavailable_worker = "20%"
-  }
+
+  kubernetes_version = var.rke_kubernetes_version
 }

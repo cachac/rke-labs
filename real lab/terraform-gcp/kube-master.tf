@@ -165,83 +165,21 @@ resource "google_compute_instance" "rke_server" {
   }
 }
 
-# module "rancher_common" {
-#   source = "../rancher-common"
+module "rancher_common" {
+  source = "./rancher_common"
 
-#   node_public_ip         = google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip
-#   node_internal_ip       = google_compute_instance.rke_server.network_interface.0.network_ip
-#   node_username          = local.node_username
-#   ssh_private_key_pem    = tls_private_key.global_key.private_key_pem
-#   rke_kubernetes_version = var.rke_kubernetes_version
+  node_public_ip         = google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip
+  node_internal_ip       = google_compute_instance.rke_server.network_interface.0.network_ip
+  node_username          = local.node_username
+  ssh_private_key_pem    = tls_private_key.global_key.private_key_pem
+  rke_kubernetes_version = var.rke_kubernetes_version
 
-#   cert_manager_version = var.cert_manager_version
-#   rancher_version      = var.rancher_version
+  cert_manager_version = var.cert_manager_version
+  rancher_version      = var.rancher_version
 
-#   rke_server_dns = join(".", ["rancher", google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip, "xip.io"])
-#   admin_password     = var.rke_server_admin_password
+  rancher_server_dns = join(".", ["rancher", google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip, "xip.io"])
+  admin_password     = var.rancher_server_admin_password
 
-#   workload_kubernetes_version = var.workload_kubernetes_version
-#   workload_cluster_name       = "quickstart-gcp-custom"
-# }
-
-#
-# Rancher
-#
-# https://www.youtube.com/watch?v=YNCq-prI8-8&feature=youtu.be
-
-# provider "rke" {
-#   log_file = "rke_debug.log"
-# }
-
-# Provision RKE cluster on provided infrastructure
-# resource "rke_cluster" "rancher_cluster" {
-#   cluster_name = "quickstart-rancher-server"
-
-#   nodes {
-#     address          = var.node_public_ip
-#     internal_address = var.node_internal_ip
-#     user             = var.node_username
-#     role             = ["controlplane", "etcd", "worker"]
-#     ssh_key          = var.ssh_private_key_pem
-#   }
-
-#   kubernetes_version = var.rke_kubernetes_version
-# }
-
-
-
-
-
-
-
-
-
-# simple test
-# provider "google" {
-#   project = "kubernetes-292714" # PROJECT_ID
-#   region  = var.gcp_region
-#   zone    = "us-central1-f"
-# }
-
-# resource "google_compute_instance" "vm_instance" {
-#   name         = "kubemaster"
-#   machine_type = "n1-standard-1"
-
-#   boot_disk {
-#     initialize_params {
-#       image = "debian-cloud/debian-9"
-#     }
-#   }
-
-#   network_interface {
-#     # A default network is created for all GCP projects
-#     network = google_compute_network.vpc_network.self_link
-#     access_config {
-#     }
-#   }
-# }
-
-# resource "google_compute_network" "vpc_network" {
-#   name                    = "terraform-network"
-#   auto_create_subnetworks = "true"
-# }
+  workload_kubernetes_version = var.workload_kubernetes_version
+  workload_cluster_name       = "quickstart-gcp-custom"
+}

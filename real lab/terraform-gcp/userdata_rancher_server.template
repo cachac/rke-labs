@@ -8,55 +8,6 @@ curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
 sudo usermod -aG docker ${username}
 newgrp docker
 
-# kubectl
-sudo apt-get update && sudo apt-get install -y apt-transport-https
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-sudo apt-get update
-sudo apt-get install -y kubectl
-
-# rke
-sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
-sudo chmod +x /usr/local/bin/rke
-# copy ssh between nodes
-sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
-sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
-# sudo sed -i 's/***/PermitRootLogin without-password/g' /etc/ssh/sshd_config
-# echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
-systemctl reload sshd
-# copy ssh key's
-sudo apt-get install sshpass
-runuser -l ${username} -c  'ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ""'
-chmod 600 /home/${username}/.ssh/id_rsa*
-chown ${username}:${username} /home/${username}/.ssh/id_rsa*
-echo -e "password\npassword\n" | passwd ${username}
-runuser -l ${username} -c 'sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}'
-# runuser -l cachac6 -c 'sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@34.71.24.97'
-
-# launch rke
-echo '
-nodes:
-  - address: ${node_public_ip}
-    internal_address: ${node_internal_ip}
-    user: ${username}
-    role: [controlplane, worker, etcd]
-
-services:
-  etcd:
-    snapshot: true
-    creation: 6h
-    retention: 24h
-
-# Required for external TLS termination with
-# ingress-nginx v0.22+
-ingress:
-  provider: nginx
-  options:
-    use-forwarded-headers: "true"' >> /home/${username}/rancher-cluster.yml
-
-# # cluster up # #
-runuser -l ${username} -c 'rke up --config /home/${username}/rancher-cluster.yml'
-
 # config bashrc
 runuser -l ${username} -c  'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml'
 echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc

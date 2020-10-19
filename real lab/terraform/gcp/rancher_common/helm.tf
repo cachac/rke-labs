@@ -15,25 +15,25 @@ resource "helm_release" "cert_manager" {
 }
 
 # Install Rancher helm chart
-# resource "helm_release" "rancher_server" {
-#   depends_on = [
-#     helm_release.cert_manager,
-#   ]
+resource "helm_release" "rancher_server" {
+  depends_on = [
+    helm_release.cert_manager,
+  ]
 
-#   repository       = "https://releases.rancher.com/server-charts/latest"
-#   name             = "rancher"
-#   chart            = "rancher"
-#   version          = var.rancher_version
-#   namespace        = "cattle-system"
-#   create_namespace = true
+  repository       = "https://releases.rancher.com/server-charts/latest"
+  name             = "rancher"
+  chart            = "rancher"
+  version          = var.rancher_version
+  namespace        = "cattle-system"
+  create_namespace = true
 
-#   set {
-#     name  = "hostname"
-#     value = var.rancher_server_dns
-#   }
+  set {
+    name  = "hostname"
+    value = var.rancher_server_dns
+  }
 
-#   set {
-#     name  = "certmanager.version"
-#     value = var.cert_manager_version
-#   }
-# }
+  set {
+    name  = "certmanager.version"
+    value = var.cert_manager_version
+  }
+}

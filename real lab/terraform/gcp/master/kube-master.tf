@@ -76,11 +76,11 @@ resource "google_compute_firewall" "rke_fw_allowall" {
 
 # disk
 resource "google_compute_disk" "rke_master_disk" {
-  name  = "master-disk"
-  image = data.google_compute_image.rke_master_image.self_link
-  size  = 30
-  type  = "pd-ssd"
-  zone  = var.gcp_zone
+  name       = "master-disk"
+  image      = data.google_compute_image.rke_master_image.self_link
+  size       = 10
+  type       = "pd-standard"
+  zone       = var.gcp_zone
   labels = {
     env = "dev"
   }
@@ -166,7 +166,7 @@ resource "google_compute_instance" "rke_server" {
 }
 
 module "rancher_common" {
-  source = "./rancher_common"
+  source = "../rancher_common"
 
   node_public_ip         = google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip
   node_internal_ip       = google_compute_instance.rke_server.network_interface.0.network_ip

@@ -2,7 +2,7 @@
 
 # Provision RKE cluster on provided infrastructure
 resource "rke_cluster" "rancher_cluster" {
-  cluster_name = "quickstart-rancher-server"
+  cluster_name = "dev-server"
 
   nodes {
     address          = var.node_public_ip

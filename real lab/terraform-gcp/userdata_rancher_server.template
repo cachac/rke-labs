@@ -26,14 +26,13 @@ sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
 systemctl reload sshd
 # copy ssh key's
 sudo apt-get install sshpass
-ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ""
+runuser -l ${username} -c  'ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ""'
 chmod 600 /home/${username}/.ssh/id_rsa*
 chown ${username}:${username} /home/${username}/.ssh/id_rsa*
 echo -e "password\npassword\n" | passwd ${username}
 # su cachac6
 runuser -l ${username} -c 'sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}'
 # runuser -l cachac6 -c 'sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@34.71.24.97'
-# sed -i 's/root@rke-master/${username}@rke-master/g' /home/${username}/.ssh/id_rsa.pub
 
 # launch rke
 echo '
@@ -60,7 +59,7 @@ ingress:
 runuser -l ${username} -c 'rke up --config /home/${username}/rancher-cluster.yml'
 
 # config
-export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml
+runuser -l ${username} -c  'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml'
 echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
 echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
 echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc

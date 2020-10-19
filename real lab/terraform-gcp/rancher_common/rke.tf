@@ -1,11 +1,13 @@
-provider "kubernetes" {
-  config_context = "my-context"
-}
+# Kubernetes provider
+provider "k8s" {
+  host = "10.0.0.2"
+	# rke_cluster.rancher_cluster.api_server_url
 
-resource "kubernetes_namespace" "example" {
-  metadata {
-    name = "my-first-namespace"
-  }
+  client_certificate     = rke_cluster.rancher_cluster.client_cert
+  client_key             = rke_cluster.rancher_cluster.client_key
+  cluster_ca_certificate = rke_cluster.rancher_cluster.ca_crt
+
+  load_config_file = false
 }
 
 # Configure RKE provider

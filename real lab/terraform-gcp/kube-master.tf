@@ -116,12 +116,12 @@ resource "google_compute_instance" "rke_server" {
   scheduling {
     # if need preemptible VM (24h)
     automatic_restart = false
-		preemptible = true
+    preemptible       = true
   }
 
   metadata = {
-    ssh-keys = var.administrator_ssh
-    // "cachac6:${tls_private_key.global_key.public_key_openssh}"
+    # ssh-keys = var.administrator_ssh
+    ssh-keys = "cachac6:${tls_private_key.global_key.public_key_openssh}",
     user-data = templatefile(
       join("/", [path.module, "userdata_rancher_server.template"]),
       {
@@ -140,7 +140,7 @@ resource "google_compute_instance" "rke_server" {
     inline = [
       "echo 'Waiting for cloud-init to complete...'",
       "cloud-init status --wait > /dev/null",
-      "echo 'Completed cloud-init!'",
+      "echo 'Completed cloud-init!!'",
     ]
 
     connection {

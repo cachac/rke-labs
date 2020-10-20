@@ -18,7 +18,7 @@
 # terraform init
 # terraform plan
 # terraform apply -auto-approve
-# terraform destroy -target google_compute_instance.rke_server -auto-approve
+# terraform destroy -target google_compute_instance.rke_master01 -auto-approve
 
 # check: provisionin Rancher cluster: https://medium.com/@chfrank_cgn/building-a-rancher-cluster-on-google-cloud-with-terraform-31f1453fbb31
 # rke GCP: https://rancher.com/docs/rancher/v2.x/en/quick-start-guide/deployment/google-gcp-qs/
@@ -86,7 +86,7 @@ resource "google_compute_disk" "rke_master_disk" {
 }
 
 # GCP Compute Instance for creating a single node RKE cluster and installing the Rancher server
-resource "google_compute_instance" "rke_server" {
+resource "google_compute_instance" "rke_master01" {
   depends_on = [
     google_compute_firewall.rke_fw_allowall,
   ]
@@ -168,8 +168,8 @@ resource "google_compute_instance" "rke_server" {
 module "rancher_common" {
   source = "../rancher_common"
 
-  node_public_ip         = google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip
-  node_internal_ip       = google_compute_instance.rke_server.network_interface.0.network_ip
+  node_public_ip         = google_compute_instance.rke_master01.network_interface.0.access_config.0.nat_ip
+  node_internal_ip       = google_compute_instance.rke_master01.network_interface.0.network_ip
   node_username          = local.node_username
   ssh_private_key_pem    = tls_private_key.global_key.private_key_pem
   rke_kubernetes_version = var.rke_kubernetes_version
@@ -177,7 +177,7 @@ module "rancher_common" {
   cert_manager_version = var.cert_manager_version
   rancher_version      = var.rancher_version
 
-  rancher_server_dns = join(".", ["rancher", google_compute_instance.rke_server.network_interface.0.access_config.0.nat_ip, "xip.io"])
+  rancher_server_dns = join(".", ["rancher", google_compute_instance.rke_master01.network_interface.0.access_config.0.nat_ip, "xip.io"])
   admin_password     = var.rancher_server_admin_password
 
   workload_kubernetes_version = var.workload_kubernetes_version

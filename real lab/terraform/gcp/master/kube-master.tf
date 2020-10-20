@@ -48,7 +48,7 @@ resource "google_compute_subnetwork" "rke_subnet" {
   network       = google_compute_network.rke_network.id
 }
 
-resource "google_compute_address" "rke_internal_address" {
+resource "google_compute_address" "rke_internal_address01" {
   name         = "rke-internal-address"
   subnetwork   = google_compute_subnetwork.rke_subnet.id
   address_type = "INTERNAL"
@@ -56,7 +56,7 @@ resource "google_compute_address" "rke_internal_address" {
   region       = var.gcp_region
 }
 
-resource "google_compute_address" "rke_external_address" {
+resource "google_compute_address" "rke_external_address01" {
   name   = "rke-external-address"
   region = var.gcp_region
 }
@@ -74,7 +74,7 @@ resource "google_compute_firewall" "rke_fw_allowall" {
   source_ranges = ["0.0.0.0/0"]
 }
 
-# disk
+# disk: admin by google
 resource "google_compute_disk" "rke_master_disk" {
   name  = "master-disk"
   image = data.google_compute_image.rke_master_image.self_link
@@ -101,17 +101,17 @@ resource "google_compute_instance" "rke_server" {
   }
 
   boot_disk {
-    source      = "master-disk-db01" # google_compute_disk.rke_master_disk.id
+    source      = google_compute_disk.rke_master_disk.id # "master-disk-db01"
     auto_delete = false
   }
 
   network_interface {
     network    = google_compute_network.rke_network.id
     subnetwork = google_compute_subnetwork.rke_subnet.id
-    network_ip = google_compute_address.rke_internal_address.address
+    network_ip = google_compute_address.rke_internal_address01.address
 
     access_config {
-      nat_ip = google_compute_address.rke_external_address.address
+      nat_ip = google_compute_address.rke_external_address01.address
     }
   }
 
@@ -129,8 +129,8 @@ resource "google_compute_instance" "rke_server" {
       {
         docker_version   = var.docker_version
         username         = local.node_username
-        node_internal_ip = google_compute_address.rke_internal_address.address
-        node_public_ip   = google_compute_address.rke_external_address.address
+        node_internal_ip = google_compute_address.rke_internal_address01.address
+        node_public_ip   = google_compute_address.rke_external_address01.address
         # ssh_public_key   = var.ssh_public_key_pem
         # ssh_private_key  = var.ssh_private_key_pem
         # kubectl_alias    = var.kubectl_alias
@@ -138,7 +138,7 @@ resource "google_compute_instance" "rke_server" {
     )
   }
 
-  provisioner "file" {
+  provisioner "file" {	
     source      = "${path.module}/.kubectl_aliases"
     destination = "/home/cachac6/.kubectl_aliases"
 

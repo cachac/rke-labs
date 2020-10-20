@@ -11,20 +11,12 @@ resource "local_file" "ssh_private_key_pem" {
 }
 
 # Networking
-# resource "google_compute_address" "rke_worker_internal_address01" {
-#   name         = "rke-internal-address"
-#   subnetwork   = "rke_subnet"
-#   address_type = "INTERNAL"
-#   address      = "10.0.0.10"
-#   region       = var.gcp_region
-# }
-
 resource "google_compute_address" "rke_worker_external_address01" {
   name   = "rke-worker-external-address01"
   region = var.gcp_region
 }
 
-# disk
+# disk: admin by google
 resource "google_compute_disk" "rke_worker_disk01" {
   name  = "worker-disk01"
   image = data.google_compute_image.rke_worker_image.self_link
@@ -47,7 +39,7 @@ resource "google_compute_instance" "rke_worker01" {
   }
 
   boot_disk {
-    source      = "worker-disk-db01" # google_compute_disk.rke_worker_disk01.id
+    source      = google_compute_disk.rke_worker_disk01.id # "worker-disk-db01" #
     auto_delete = false
   }
 

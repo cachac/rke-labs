@@ -20,6 +20,7 @@ echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${usern
 echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
 echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
 
+# ssh
 
 
 

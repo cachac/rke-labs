@@ -29,13 +29,11 @@ resource "tls_private_key" "global_key" {
   algorithm = "RSA"
   rsa_bits  = 2048
 }
-
 resource "local_file" "ssh_private_key_pem" {
   filename          = "${path.module}/id_rsa"
   sensitive_content = tls_private_key.global_key.private_key_pem
   file_permission   = "0600"
 }
-
 # Networking
 resource "google_compute_network" "rke_network" {
   name = "rke-network"
@@ -138,7 +136,7 @@ resource "google_compute_instance" "rke_server" {
     )
   }
 
-  provisioner "file" {	
+  provisioner "file" {
     source      = "${path.module}/.kubectl_aliases"
     destination = "/home/cachac6/.kubectl_aliases"
 

@@ -62,6 +62,8 @@ runuser -l ${username} -c  'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster
 echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
 echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
 echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
+echo "source <(kubectl completion bash)" >> ~/.bashrc
+complete -F __start_kubectl k
 
 # helm
 

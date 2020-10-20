@@ -47,7 +47,8 @@ resource "google_compute_instance" "rke_worker01" {
   }
 
   boot_disk {
-    source = google_compute_disk.rke_worker_disk01.id
+    source      = "worker-disk-db01" # google_compute_disk.rke_worker_disk01.id
+    auto_delete = false
   }
 
 

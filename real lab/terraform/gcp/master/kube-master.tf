@@ -76,11 +76,11 @@ resource "google_compute_firewall" "rke_fw_allowall" {
 
 # disk
 resource "google_compute_disk" "rke_master_disk" {
-  name       = "master-disk"
-  image      = data.google_compute_image.rke_master_image.self_link
-  size       = 10
-  type       = "pd-standard"
-  zone       = var.gcp_zone
+  name  = "master-disk"
+  image = data.google_compute_image.rke_master_image.self_link
+  size  = 10
+  type  = "pd-standard"
+  zone  = var.gcp_zone
   labels = {
     env = "dev"
   }
@@ -101,7 +101,8 @@ resource "google_compute_instance" "rke_server" {
   }
 
   boot_disk {
-    source = google_compute_disk.rke_master_disk.id
+    source      = "master-disk-db01" # google_compute_disk.rke_master_disk.id
+    auto_delete = false
   }
 
   network_interface {

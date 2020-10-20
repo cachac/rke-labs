@@ -17,13 +17,8 @@ resource "rke_cluster" "rancher_cluster" {
     internal_address = "10.0.0.10"
     user             = var.node_username
     role             = ["worker"]
-    ssh_key          = "../worker/id_rsa" # var.ssh_private_key_pem
+    ssh_key          = var.ssh_private_key_pem
   }
 
   kubernetes_version = var.rke_kubernetes_version
-}
-
-resource "local_file" "kube_cluster_yaml" {
-  filename = "/home/${local.node_username}/kube_config_server.yaml.yml"
-  content  = rke_cluster.rancher_cluster.kube_config_yaml
 }

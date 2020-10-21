@@ -1,0 +1,36 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ranchertest-tk
+  namespace: default
+spec:
+  secretName: ranchertest-tk-tls
+  # duration: 2160h # 90d
+  # renewBefore: 360h # 15d
+  # subject:
+  #   organizations:
+  #   - jetstack
+  commonName: ranchertest.tk
+  # privateKey:
+  #   algorithm: RSA
+  #   encoding: PKCS1
+  #   size: 2048
+  # usages:
+  #   - server auth
+  #   - client auth
+  # At least one of a DNS Name, URI, or IP address is required.
+  dnsNames:
+  - ranchertest.com
+  - www.ranchertest.com
+  # uris:
+  # - spiffe://cluster.local/ns/default/sa/example
+  # ipAddresses:
+  # - 10.0.0.2
+  # Issuer references are always required.
+  issuerRef:
+    name: letsencrypt-staging
+    # ClusterIssuer or Issuer
+    kind: ClusterIssuer
+    # This is optional since cert-manager will default to this value however
+    # if you are using an external issuer, change this to that issuer group.
+    #group: cert-manager.io

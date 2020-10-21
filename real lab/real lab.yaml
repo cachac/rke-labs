@@ -35,12 +35,70 @@ curl <EXTERNAL-IP>
 # install nginx and config
 
 
-# ingress crontroller
-# check option: https://cert-manager.io/docs/tutorials/acme/ingress/
+# Ingress crontroller
+# check option ingress + cert + helm:
+https://cert-manager.io/docs/tutorials/acme/ingress/
 # la opción del link anterior muestra un external LB, probar.
 
 #
-# NGINX option ( USER DAEMON SET )
+# Rancher option (add-ons)
+https://rancher.com/docs/rke/latest/en/config-options/add-ons/ingress-controllers/
+https://blog.weareopensource.me/rancher-lets-encrypt-set-up-with-ingress-nginx-cert-manager/
+
+#
+# cert-manager install (kubectl)
+#
+# cert manager docs
+https://cert-manager.io/docs/installation/kubernetes/
+https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-with-cert-manager-on-digitalocean-kubernetes-es
+
+# clean
+# with kubectl
+kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
+kubectl delete apiservice v1beta1.webhook.cert-manager.io
+kubectl delete namespace cert-manager
+# by security : issuer
+kubectl delete letsencrypt-staging
+kubectl delete letsencrypt-prod
+kubectl delete issuers.cert-manager.io letsencrypt-staging
+kubectl delete issuers.cert-manager.io letsencrypt-prod
+# install CRD's with kubectl
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
+# check
+kubectl get all -n cert-manager
+# Add Let's Encrypt Issuer, download link, edit mail and save STAG
+kubectl create --namespace default --edit -f https://cert-manager.io/docs/tutorials/acme/example/staging-issuer.yaml
+# Add Let's Encrypt Issuer, download link, edit mail and save PROD
+kubectl create --namespace default --edit -f https://cert-manager.io/docs/tutorials/acme/example/production-issuer.yaml
+# tip: create issuer or clusterIssuer https://cert-manager.io/docs/configuration/acme/
+# check
+kubectl describe issuers.cert-manager.io letsencrypt-staging
+or
+kubectl describe clusterissuers.cert-manager.io letsencrypt-staging
+# cert logs
+kubectl logs -n cert-manager deploy/cert-manager -f
+# create CERT
+kubectl create -f staging_certificate.yml
+# check cert
+kubectl describe certificate ranchertest-tk
+
+
+
+# ingress controller
+
+
+
+
+
+
+
+
+
+
+
+#
+# NGINX ingress controller option ( USER DAEMON SET ) without cert manager
+#
 https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/
 
 # sa - rbac - secrets - cm - deploy
@@ -50,20 +108,13 @@ kubectl apply -f common/default-server-secret.yaml
 kubectl apply -f common/nginx-config.yaml
 kubectl apply -f daemon-set/nginx-ingress.yaml
 
+
+
+
+
+#
 # APP deploy, svc, ingress
-ka app/deployment.yaml
-ka app/ingress.yaml
-ka app/clusterIP.yaml
-
-curl -I <klab.ranchertest.tk>
-status 200 !!!!!!!!!!!!
-
-
-# cert manager
-https://cert-manager.io/docs/installation/kubernetes/
-https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-with-cert-manager-on-digitalocean-kubernetes-es
-
-# APP deploy, svc, ingress
+#
 # check option: https://kubernetes.io/docs/concepts/services-networking/ingress/
 
 ka app/deployment.yaml

@@ -43,6 +43,22 @@ echo "Finding  nodes..." >> /home/${username}/ilog
 for node in "rke-master01" "rke-master02" "rke-worker02"
 do
 	echo "$node" >> /home/${username}/ilog
+	#if rke-master01 is offline, wait...
+	if $node == "rke-master01"
+	then
+		i="0"
+		while [ $i -lt 10 ]
+		do
+			if ! ping -c 1 $node &> /dev/null
+			then
+				echo "waiting rke-master01 [$i]..." >> /home/${username}/ilog
+				sleep 60
+				break
+			fi
+			i=$[$i+1]
+		done
+	fi
+
 	if ping -c 1 $node &> /dev/null
 	then
 		# conecta al nodo y agrega ssh# conecta al nodo y agrega ssh
@@ -55,26 +71,6 @@ do
 		echo "$node offline :(" >> /home/${username}/ilog
 	fi
 done
-
-# helm
-
-# lets encrypt
-
-# nginx controller
-
-#
-# apps config
-#
-
-# deployment
-
-# cluster IP
-
-# ingress
-
-# extra: MetalLB
-# extra Rancher
-
 
 # end
 duration=$SECONDS

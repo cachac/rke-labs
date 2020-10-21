@@ -52,6 +52,7 @@ resource "google_compute_instance" "rke_worker01" {
 
     access_config {
       nat_ip = google_compute_address.rke_worker_external_address01.address
+      #"35.223.93.13" #
     }
   }
 
@@ -64,12 +65,12 @@ resource "google_compute_instance" "rke_worker01" {
   metadata = {
     ssh-keys = "${local.node_username}:${tls_private_key.global_key.public_key_openssh}",
     user-data = templatefile(
-      join("/", [path.module, "userdata_worker.template"]),
+      join("/", [path.module, "rke_worker01.template"]),
       {
         docker_version = var.docker_version
         username       = local.node_username
-				# node_internal_ip = google_compute_address.rke_worker_internal_address01.address
-        node_public_ip   = google_compute_address.rke_worker_external_address01.address
+        # node_internal_ip = google_compute_address.rke_worker_internal_address01.address
+        node_public_ip = google_compute_address.rke_worker_external_address01.address
       }
     )
   }

@@ -10,7 +10,7 @@ nodes:
   - address: rke-worker01
     internal_address: 10.0.0.21
     user: cachac6
-    role: [worker]
+    role: [controlplane, worker, etcd]
   - address: rke-worker02
     internal_address: 10.0.0.22
     user: cachac6

@@ -109,6 +109,7 @@ resource "google_compute_instance" "rke_master01" {
 
     access_config {
       nat_ip = google_compute_address.rke_external_address01.address
+      # "35.238.114.204"
     }
   }
 
@@ -124,12 +125,12 @@ resource "google_compute_instance" "rke_master01" {
       # using providers (uncomment below module)
       # join("/", [path.module, "userdata_rancher_server.template"]),
       # using script
-      join("/", [path.module, "rke_server_script.template"]),
+      join("/", [path.module, "rke_master01_script.template"]),
       {
-        docker_version   = var.docker_version
-        username         = local.node_username
+        docker_version = var.docker_version
+        username       = local.node_username
         # node_internal_ip = google_compute_address.rke_internal_address01.address
-        node_public_ip   = google_compute_address.rke_external_address01.address
+        node_public_ip = google_compute_address.rke_external_address01.address
       }
     )
   }

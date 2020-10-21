@@ -10,13 +10,6 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission   = "0600"
 }
 # Networking
-# resource "google_compute_address" "rke_internal_address02" {
-#   name         = "rke-internal-address02"
-#   subnetwork   =
-#   address_type = "INTERNAL"
-#   address      = "10.0.0.12"
-#   region       = var.gcp_region
-# }
 
 resource "google_compute_address" "rke_external_address02" {
   name   = "rke-external-address02"
@@ -57,6 +50,7 @@ resource "google_compute_instance" "rke_master02" {
 
     access_config {
       nat_ip = google_compute_address.rke_external_address02.address
+      # "35.232.235.255"
     }
   }
 
@@ -72,7 +66,7 @@ resource "google_compute_instance" "rke_master02" {
       # using providers (uncomment below module)
       # join("/", [path.module, "userdata_rancher_server.template"]),
       # using script
-      join("/", [path.module, "rke_server_script.template"]),
+      join("/", [path.module, "rke_master02_script.template"]),
       {
         docker_version = var.docker_version
         username       = local.node_username

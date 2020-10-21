@@ -82,22 +82,11 @@ kubectl create -f staging_certificate.yml
 # check cert
 kubectl describe certificate ranchertest-tk
 
-
-
 # ingress controller
-
-
-
-
-
-
-
-
-
-
+# rke create a default ingress controller
 
 #
-# NGINX ingress controller option ( USER DAEMON SET ) without cert manager
+# option: NGINX ingress controller option ( USER DAEMON SET ) without cert manager
 #
 https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/
 
@@ -107,9 +96,6 @@ kubectl apply -f rbac/rbac.yaml
 kubectl apply -f common/default-server-secret.yaml
 kubectl apply -f common/nginx-config.yaml
 kubectl apply -f daemon-set/nginx-ingress.yaml
-
-
-
 
 
 #

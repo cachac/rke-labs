@@ -21,8 +21,8 @@ spec:
   #   - client auth
   # At least one of a DNS Name, URI, or IP address is required.
   dnsNames:
-  - ranchertest.com
-  - www.ranchertest.com
+  - ranchertest.tk
+  - www.ranchertest.tk
   # uris:
   # - spiffe://cluster.local/ns/default/sa/example
   # ipAddresses:

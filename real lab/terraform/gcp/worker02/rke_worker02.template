@@ -69,9 +69,7 @@ do
 			sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@$node
 			ssh ${username}@$node "
 				sudo ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip}
-				sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}
-			"
-		" >> /home/${username}/ilog
+				sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip} "" >> /home/${username}/ilog
 		echo "$node ok" >> /home/${username}/ilog
 	else
 		echo "$node offline :(" >> /home/${username}/ilog

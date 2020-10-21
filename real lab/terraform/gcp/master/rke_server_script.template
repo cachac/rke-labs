@@ -69,48 +69,18 @@ ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip} >> /home
 runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}" >> /home/${username}/ilog
 # runuser -l cachac6 -c 'sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@rke-master01'
 
-# find nodes
-clusterConfig=$"
-nodes:
-  - address: ${node_public_ip}
-    internal_address: ${node_internal_ip}
-    user: ${username}
-    role: [controlplane, worker, etcd]
-"
+# find nodes and share ssh keys
 echo "Finding  nodes..." >> /home/${username}/ilog
 for node in "rke-master02" "rke-worker01" "rke-worker02"
 do
 	echo "$node" >> /home/${username}/ilog
-
 	if ping -c 1 $node &> /dev/null
 	then
 		# conecta al nodo y agrega ssh
+		ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R $node >> /home/${username}/ilog
 		runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@$node" >> /home/${username}/ilog
+		ssh ${username}@$node "ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R $node" >> /home/${username}/ilog
 		ssh ${username}@$node "cat /home/${username}/.ssh/id_rsa.pub >> ~/authorized_keys" >> /home/${username}/ilog
-
-		ip=""
-		role=""
-		case $node in
-			"rke-master02")
-				ip="10.0.0.12"
-		    role="[controlplane, worker, etcd]"
-				;;
-			"rke-worker01")
-				ip="10.0.0.21"
-		    role="[worker]"
-				;;
-			"rke-worker02")
-				ip="10.0.0.22"
-		    role="[worker]"
-				;;
-		esac
-
-		clusterConfig+=$"
-  - address: $node
-    internal_address: $ip
-    user: ${username}
-    role: $role"
-
 		echo "$node ok" >> /home/${username}/ilog
 	else
 		echo "$node offline :(" >> /home/${username}/ilog
@@ -120,23 +90,6 @@ done
 #
 # launch rke
 #
-clusterConfig+=$"
-services:
-  etcd:
-    snapshot: true
-    creation: 6h
-    retention: 24h
-
-# Required for external TLS termination with
-# ingress-nginx v0.22+
-ingress:
-  provider: nginx
-  options:
-    use-forwarded-headers: 'true'"
-
-echo "$clusterConfig" > /home/${username}/rancher-cluster.yml
-
-# # cluster up # #
 runuser -l ${username} -c "rke up --config /home/${username}/rancher-cluster.yml" > /home/${username}/rke_log
 
 # helm

@@ -129,23 +129,24 @@ resource "google_compute_instance" "rke_master01" {
       {
         docker_version   = var.docker_version
         username         = local.node_username
-        node_internal_ip = google_compute_address.rke_internal_address01.address
+        # node_internal_ip = google_compute_address.rke_internal_address01.address
         node_public_ip   = google_compute_address.rke_external_address01.address
       }
     )
   }
 
-  # provisioner "file" {
-  #   source      =  "../../keys/id_rsa"
-  #   destination = "/home/${local.node_username}/.ssh/id_rsa"
+  # rke config file
+  provisioner "file" {
+    source      = "${path.module}/rancher-cluster.yml"
+    destination = "/home/${local.node_username}/rancher-cluster.yml"
 
-  #   connection {
-  #     type        = "ssh"
-  #     host        = self.network_interface.0.access_config.0.nat_ip
-  #     user        = local.node_username
-  #     private_key = tls_private_key.global_key.private_key_pem
-  #   }
-  # }
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
 
   # kubectl alias
   provisioner "file" {

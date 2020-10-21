@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: somosfactura2-api-deployment
+  # namespace: dev
+
+spec:
+  replicas: 1
+  template:
+    # pod
+    metadata:
+      labels:
+        app: somosfactura2
+        tier: backend
+      name: somosfactura2-api
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: somosfactura2-api
+          image: docker.pkg.github.com/cachac/somosfactura2api/api-qa:latest
+          imagePullPolicy: "Always"
+          ports:
+            - name: http
+              containerPort: 3055
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "0.1"
+            limits:
+              memory: "512Mi"
+              cpu: "0.7"
+
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: regcred
+  selector:
+    matchLabels:
+      app: somosfactura2
+      tier: backend

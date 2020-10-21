@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+
+  name: kube-verify-ingress
+  # namespace: kube-verify
+spec:
+  rules:
+    - host: klab.ranchertest.tk
+      http:
+        paths:
+          - backend:
+              serviceName: kube-verify
+              servicePort: 8081
+            path: "/"
+  # This section is only required if TLS is to be enabled for the Ingress
+  tls:
+    - hosts:
+        - ranchertest.tk
+        - www.ranchertest.tk
+        - klab.ranchertest.tk
+      secretName: ranchertest.tk-tls

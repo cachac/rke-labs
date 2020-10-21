@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: somosfactura2-api-nodeport
+  # namespace: dev
+
+spec:
+  type: NodePort
+  ports:
+    - targetPort: 3055 # pod
+      port: 80 # service
+      nodePort: 30055 # node
+  selector: # labels of pod
+    app: somosfactura2
+    tier: backend

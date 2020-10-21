@@ -47,8 +47,6 @@ fi
 # copy ssh between nodes
 sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
 sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
-# sudo sed -i 's/***/PermitRootLogin without-password/g' /etc/ssh/sshd_config
-# echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
 systemctl reload sshd
 # copy ssh key's
 if ! command -v sshpass &> /dev/null
@@ -108,10 +106,10 @@ do
 		esac
 
 		clusterConfig+=$"
-	- address: $node
-		internal_address: $ip
-		user: ${username}
-		role: $role"
+  - address: $node
+    internal_address: $ip
+    user: ${username}
+    role: $role"
 
 		echo "$node ok" >> /home/${username}/ilog
 	else
@@ -136,7 +134,7 @@ ingress:
   options:
     use-forwarded-headers: 'true'"
 
-echo "$clusterConfig" >> /home/${username}/rancher-cluster.yml
+echo "$clusterConfig" > /home/${username}/rancher-cluster.yml
 
 # # cluster up # #
 runuser -l ${username} -c "rke up --config /home/${username}/rancher-cluster.yml" > /home/${username}/rke_log

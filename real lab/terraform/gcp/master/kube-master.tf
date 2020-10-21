@@ -119,7 +119,6 @@ resource "google_compute_instance" "rke_master01" {
   }
 
   metadata = {
-    # ssh-keys = var.administrator_ssh
     ssh-keys = "${local.node_username}:${tls_private_key.global_key.public_key_openssh}",
     user-data = templatefile(
       # using providers (uncomment below module)

@@ -76,12 +76,3 @@ locals {
   node_username = "cachac6"
 }
 
-variable "administrator_ssh" {
-  type        = string
-  description = "public ssh key for the admin"
-}
-
-# variable "administrator_ssh_keypath" {
-#   type        = "string"
-#   description = "path to ssh private key"
-# }

@@ -12,14 +12,14 @@ resource "local_file" "ssh_private_key_pem" {
 }
 
 # Networking
-resource "google_compute_address" "rke_worker_external_address01" {
-  name   = "rke-worker-external-address01"
+resource "google_compute_address" "rke_worker_external_address02" {
+  name   = "rke-worker-external-address02"
   region = var.gcp_region
 }
 
 # disk: admin by google
-resource "google_compute_disk" "rke_worker_disk01" {
-  name  = "worker-disk01"
+resource "google_compute_disk" "rke_worker_disk02" {
+  name  = "worker-disk02"
   image = data.google_compute_image.rke_worker_image.self_link
   size  = 10
   type  = "pd-standard"
@@ -30,8 +30,8 @@ resource "google_compute_disk" "rke_worker_disk01" {
 }
 
 # GCP Compute Instance for creating a single node RKE cluster and installing the Rancher server
-resource "google_compute_instance" "rke_worker01" {
-  name         = "${var.prefix}worker01"
+resource "google_compute_instance" "rke_worker02" {
+  name         = "${var.prefix}worker02"
   machine_type = var.machine_type
   zone         = var.gcp_zone
   tags         = ["type", "terraform"]
@@ -40,7 +40,7 @@ resource "google_compute_instance" "rke_worker01" {
   }
 
   boot_disk {
-    source      = google_compute_disk.rke_worker_disk01.id # "worker-disk-db01" #
+    source      = google_compute_disk.rke_worker_disk02.id # "worker-disk-db02" #
     auto_delete = false
   }
 
@@ -48,10 +48,10 @@ resource "google_compute_instance" "rke_worker01" {
   network_interface {
     network    = "rke-network"
     subnetwork = "rke-subnet"
-    network_ip = "10.0.0.21"
+    network_ip = "10.0.0.22"
 
     access_config {
-      nat_ip = google_compute_address.rke_worker_external_address01.address
+      nat_ip = google_compute_address.rke_worker_external_address02.address
     }
   }
 
@@ -68,8 +68,8 @@ resource "google_compute_instance" "rke_worker01" {
       {
         docker_version = var.docker_version
         username       = local.node_username
-				# node_internal_ip = google_compute_address.rke_worker_internal_address01.address
-        node_public_ip   = google_compute_address.rke_worker_external_address01.address
+				# node_internal_ip = google_compute_address.rke_worker_internal_address02.address
+        node_public_ip   = google_compute_address.rke_worker_external_address02.address
       }
     )
   }

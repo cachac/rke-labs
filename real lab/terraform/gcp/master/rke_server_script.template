@@ -1,5 +1,6 @@
 #!/bin/bash -x
-
+date '+%Y/%m/%d %H:%M:%S' > /home/${username}/ilog
+SECONDS=0
 export DEBIAN_FRONTEND=noninteractive
 # root
 sudo usermod -aG sudo ${username}
@@ -14,7 +15,7 @@ then
 else echo 'Docker already installed!' >> /home/${username}/ilog
 fi
 # kubectl
-if ! command -v docker &> /dev/null
+if ! command -v kubectl &> /dev/null
 then
     sudo apt-get update && sudo apt-get install -y apt-transport-https
 		curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
@@ -25,7 +26,7 @@ then
 else echo 'Kubectl already installed!' >> /home/${username}/ilog
 fi
 # rke
-if ! command -v docker &> /dev/null
+if ! command -v rke &> /dev/null
 then
     sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
 		sudo chmod +x /usr/local/bin/rke
@@ -52,8 +53,8 @@ runuser -l ${username} -c  'ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/
 chmod 600 /home/${username}/.ssh/id_rsa*
 chown ${username}:${username} /home/${username}/.ssh/id_rsa*
 
+ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip}
 runuser -l ${username} -c 'sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}'
-# runuser -l ${username} -c 'sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_private_ip}'
 # runuser -l cachac6 -c 'sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@rke-master01'
 
 # find nodes
@@ -64,9 +65,9 @@ nodes:
     user: ${username}
     role: [controlplane, worker, etcd]
 "
-
-for node in rke-master02 rke-worker01 rke-worker02; do
-	echo "Finding $node" >> /home/${username}/ilog
+echo "Finding  nodes..." >> /home/${username}/ilog
+for node in "rke-master02" "rke-worker01" "rke-worker02"; do
+	echo $node >> /home/${username}/ilog
 
 	if ping -c 1 $node &> /dev/null
 	then
@@ -123,7 +124,7 @@ ingress:
 echo "$clusterConfig" >> /home/${username}/rancher-cluster.yml
 
 # # cluster up # #
-runuser -l ${username} -c 'rke up --config /home/${username}/rancher-cluster.yml' > rke_log
+runuser -l ${username} -c 'rke up --config /home/${username}/rancher-cluster.yml' > /home/${username}/rke_log
 
 # config bashrc
 runuser -l ${username} -c  'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml'
@@ -153,7 +154,8 @@ echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
 # extra Rancher
 
 
-
+# end
+echo 'End: $SECONDS' >> /home/${username}/ilog
 
 
 

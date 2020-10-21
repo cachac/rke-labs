@@ -74,6 +74,25 @@ echo "Finding  nodes..." >> /home/${username}/ilog
 for node in "rke-master01" "rke-worker01" "rke-worker02"
 do
 	echo "$node" >> /home/${username}/ilog
+	#if rke-master01 is offline, wait...
+	case $node in
+		"rke-master01")
+			i="0"
+			while [ $i -lt 10 ]
+			do
+				if ! ping -c 1 $node &> /dev/null
+				then
+					echo "waiting rke-master01 [$i]..." >> /home/${username}/ilog
+					sleep 60
+				else
+					echo 'rke-master ok' >> /home/${username}/ilog
+					break
+				fi
+				i=$[$i+1]
+			done
+		;;
+	esac
+	# share keys
 	if ping -c 1 $node &> /dev/null
 	then
 		# conecta al nodo y agrega ssh
@@ -110,7 +129,6 @@ done
 
 # extra: MetalLB
 # extra Rancher
-
 
 # end
 duration=$SECONDS

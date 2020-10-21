@@ -44,24 +44,26 @@ for node in "rke-master01" "rke-master02" "rke-worker02"
 do
 	echo "$node" >> /home/${username}/ilog
 	#if rke-master01 is offline, wait...
-	if $node == "rke-master01"
-	then
-		i="0"
-		while [ $i -lt 10 ]
-		do
-			if ! ping -c 1 $node &> /dev/null
-			then
-				echo "waiting rke-master01 [$i]..." >> /home/${username}/ilog
-				sleep 60
-				break
-			fi
-			i=$[$i+1]
-		done
-	fi
-
+	case $node in
+		"rke-master01")
+			i="0"
+			while [ $i -lt 10 ]
+			do
+				if ! ping -c 1 $node &> /dev/null
+				then
+					echo "waiting rke-master01 [$i]..." >> /home/${username}/ilog
+					sleep 60
+				else
+					echo 'rke-master ok' >> /home/${username}/ilog
+					break
+				fi
+				i=$[$i+1]
+			done
+		;;
+	esac
+	# share keys
 	if ping -c 1 $node &> /dev/null
 	then
-		# conecta al nodo y agrega ssh# conecta al nodo y agrega ssh
 		ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R $node >> /home/${username}/ilog
 		runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@$node" >> /home/${username}/ilog
 		ssh ${username}@$node "ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip}" >> /home/${username}/ilog
@@ -71,7 +73,6 @@ do
 		echo "$node offline :(" >> /home/${username}/ilog
 	fi
 done
-
 # end
 duration=$SECONDS
 echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."

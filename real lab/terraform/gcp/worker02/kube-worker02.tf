@@ -64,7 +64,7 @@ resource "google_compute_instance" "rke_worker02" {
   metadata = {
     ssh-keys = "${local.node_username}:${tls_private_key.global_key.public_key_openssh}",
     user-data = templatefile(
-      join("/", [path.module, "userdata_worker.template"]),
+      join("/", [path.module, "rke_worker02.template"]),
       {
         docker_version = var.docker_version
         username       = local.node_username

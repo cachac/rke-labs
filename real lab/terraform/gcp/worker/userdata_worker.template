@@ -56,12 +56,6 @@ do
 	fi
 done
 
-#
-# launch rke
-#
-# # cluster up # #
-runuser -l ${username} -c "rke up --config /home/${username}/rancher-cluster.yml" > /home/${username}/rke_log
-
 # helm
 
 # lets encrypt

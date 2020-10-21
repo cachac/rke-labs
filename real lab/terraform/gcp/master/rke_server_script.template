@@ -3,21 +3,37 @@
 export DEBIAN_FRONTEND=noninteractive
 # root
 sudo usermod -aG sudo ${username}
+echo -e "password\npassword\n" | passwd ${username}
 # docker
-curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
-sudo usermod -aG docker ${username}
-newgrp docker
-
+if ! command -v docker &> /dev/null
+then
+    curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
+		sudo usermod -aG docker ${username}
+		newgrp docker
+		echo 'Docker installed!' >> /home/${username}/ilog
+else echo 'Docker already installed!' >> /home/${username}/ilog
+fi
 # kubectl
-sudo apt-get update && sudo apt-get install -y apt-transport-https
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-sudo apt-get update
-sudo apt-get install -y kubectl
-
+if ! command -v docker &> /dev/null
+then
+    sudo apt-get update && sudo apt-get install -y apt-transport-https
+		curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+		echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+		sudo apt-get update
+		sudo apt-get install -y kubectl
+		echo 'Kubectl installed!' >> /home/${username}/ilog
+else echo 'Kubectl already installed!' >> /home/${username}/ilog
+fi
 # rke
-sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
-sudo chmod +x /usr/local/bin/rke
+if ! command -v docker &> /dev/null
+then
+    sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
+		sudo chmod +x /usr/local/bin/rke
+		echo 'RKE installed!' >> /home/${username}/ilog
+else echo 'RKE already installed!' >> /home/${username}/ilog
+fi
+
+
 # copy ssh between nodes
 sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
 sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
@@ -25,14 +41,20 @@ sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
 # echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
 systemctl reload sshd
 # copy ssh key's
-sudo apt-get install sshpass
+if ! command -v sshpass &> /dev/null
+then
+		sudo apt-get install sshpass
+		echo 'SSHpass installed!' >> /home/${username}/ilog
+else echo 'SSHpass already installed!' >> /home/${username}/ilog
+fi
+
 runuser -l ${username} -c  'ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ""'
 chmod 600 /home/${username}/.ssh/id_rsa*
 chown ${username}:${username} /home/${username}/.ssh/id_rsa*
 
-echo -e "password\npassword\n" | passwd ${username}
 runuser -l ${username} -c 'sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}'
-# runuser -l cachac6 -c 'sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@34.71.24.97'
+# runuser -l ${username} -c 'sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_private_ip}'
+# runuser -l cachac6 -c 'sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@rke-master01'
 
 # find nodes
 clusterConfig=$"
@@ -42,15 +64,16 @@ nodes:
     user: ${username}
     role: [controlplane, worker, etcd]
 "
-nodes=(rke-master02 rke-worker01 rke-worker02);
-for node in "${nodes[@]}"
-do
+
+for node in rke-master02 rke-worker01 rke-worker02; do
+	echo "Finding $node" >> /home/${username}/ilog
+
 	if ping -c 1 $node &> /dev/null
 	then
 		# conecta al nodo y agrega ssh
-		runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@$node"
-		ssh ${username}@$node "cat /home/${username}/.ssh/id_rsa.pub" >> authorized_keys
-		# config
+		runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@$node" >> /home/${username}/ilog
+		ssh ${username}@$node "cat /home/${username}/.ssh/id_rsa.pub >> ~/authorized_keys" >> /home/${username}/ilog
+
 		ip=""
 		role=""
 		case $node in
@@ -66,17 +89,17 @@ do
 				ip="10.0.0.22"
 		    role="[worker]"
 				;;
-		easac
+		esac
 
 		clusterConfig+=$"
-		  - address: ${node}
-				internal_address: ${ip}
-				user: ${username}
-				role: ${role}"
+		  - address: $node
+				internal_address: $ip
+				user: $username
+				role: $role"
 
-		echo "$node ok"
+		echo "$node ok" >> /home/${username}/ilog
 	else
-		echo "$node offline :("
+		echo "$node offline :(" >> >> /home/${username}/ilog
 	fi
 done
 
@@ -97,20 +120,17 @@ ingress:
   options:
     use-forwarded-headers: 'true'"
 
-# config test
-echo "$clusterConfig"
-
 echo "$clusterConfig" >> /home/${username}/rancher-cluster.yml
 
 # # cluster up # #
-runuser -l ${username} -c 'rke up --config /home/${username}/rancher-cluster.yml'
+runuser -l ${username} -c 'rke up --config /home/${username}/rancher-cluster.yml' > rke_log
 
 # config bashrc
 runuser -l ${username} -c  'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml'
 echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
 echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
 echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
-echo "source <(kubectl completion bash)" >> ~/.bashrc
+echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
 # complete -F __start_kubectl k
 
 # helm
@@ -130,6 +150,7 @@ echo "source <(kubectl completion bash)" >> ~/.bashrc
 # ingress
 
 # extra: MetalLB
+# extra Rancher
 
 
 

@@ -48,7 +48,7 @@ do
 		# conecta al nodo y agrega ssh
 		ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R $node >> /home/${username}/ilog
 		runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@$node" >> /home/${username}/ilog
-		ssh ${username}@$node "ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R $node" >> /home/${username}/ilog
+		ssh ${username}@$node "ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip}" >> /home/${username}/ilog
 		ssh ${username}@$node "cat /home/${username}/.ssh/id_rsa.pub >> ~/authorized_keys" >> /home/${username}/ilog
 		echo "$node ok" >> /home/${username}/ilog
 	else

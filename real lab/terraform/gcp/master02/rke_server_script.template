@@ -31,17 +31,17 @@ then
 else echo 'Kubectl already installed!' >> /home/${username}/ilog
 fi
 # rke
-if ! command -v rke &> /dev/null
-then
-    sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
-		sudo chmod +x /usr/local/bin/rke
-		echo 'RKE installed!' >> /home/${username}/ilog
-		# config
-		# config bashrc
-		runuser -l ${username} -c  'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml'
-		echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
-else echo 'RKE already installed!' >> /home/${username}/ilog
-fi
+# if ! command -v rke &> /dev/null
+# then
+#     sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
+# 		sudo chmod +x /usr/local/bin/rke
+# 		echo 'RKE installed!' >> /home/${username}/ilog
+# 		# config
+# 		# config bashrc
+# 		runuser -l ${username} -c  'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml'
+# 		echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
+# else echo 'RKE already installed!' >> /home/${username}/ilog
+# fi
 
 
 # copy ssh between nodes
@@ -90,7 +90,7 @@ done
 #
 # launch rke
 #
-runuser -l ${username} -c "rke up --config /home/${username}/rancher-cluster.yml" > /home/${username}/rke_log
+# runuser -l ${username} -c "rke up --config /home/${username}/rancher-cluster.yml" > /home/${username}/rke_log
 
 # helm
 

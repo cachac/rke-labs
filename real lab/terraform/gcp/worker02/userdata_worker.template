@@ -7,3 +7,4 @@ sudo usermod -aG sudo ${username}
 curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
 sudo usermod -aG docker ${username}
 newgrp docker
+

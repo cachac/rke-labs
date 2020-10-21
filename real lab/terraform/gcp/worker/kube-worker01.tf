@@ -48,7 +48,7 @@ resource "google_compute_instance" "rke_worker01" {
   network_interface {
     network    = "rke-network"
     subnetwork = "rke-subnet"
-    network_ip = "10.0.0.10"
+    network_ip = "10.0.0.21"
 
     access_config {
       nat_ip = google_compute_address.rke_worker_external_address01.address

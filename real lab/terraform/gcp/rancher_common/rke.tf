@@ -20,5 +20,13 @@ resource "rke_cluster" "rancher_cluster" {
     ssh_key          = var.ssh_private_key_pem
   }
 
+  nodes {
+    address          = "rke-worker02"
+    internal_address = "10.0.0.11"
+    user             = var.node_username
+    role             = ["controlplane", "etcd", "worker"]
+    ssh_key = var.ssh_private_key_pem
+  }
+
   kubernetes_version = var.rke_kubernetes_version
 }

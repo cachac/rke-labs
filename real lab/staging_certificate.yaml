@@ -11,7 +11,8 @@ spec:
   #   organizations:
   #   - jetstack
   commonName: ranchertest.tk
-  # privateKey:
+  privateKey:
+    rotationPolicy: Always
   #   algorithm: RSA
   #   encoding: PKCS1
   #   size: 2048

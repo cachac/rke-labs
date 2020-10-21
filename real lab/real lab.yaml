@@ -63,7 +63,7 @@ kubectl delete letsencrypt-prod
 kubectl delete issuers.cert-manager.io letsencrypt-staging
 kubectl delete issuers.cert-manager.io letsencrypt-prod
 # install CRD's with kubectl
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.crds.yaml
 # check
 kubectl get all -n cert-manager
 # Add Let's Encrypt Issuer, download link, edit mail and save STAG

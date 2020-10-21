@@ -26,7 +26,8 @@ prefix = "rke-"
 
 # Compute instance size of all created instances
 # machine_type = "n1-standard-1"
-machine_type = "e2-micro"
+# machine_type = "e2-medium"
+machine_type = "e2-small"
 
 # Docker version installed on target hosts
 # - Must be a version supported by the Rancher install scripts

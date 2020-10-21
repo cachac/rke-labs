@@ -22,6 +22,11 @@ then
 		echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
 		sudo apt-get update
 		sudo apt-get install -y kubectl
+		#
+		echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
+		echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
+		echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
+		# complete -F __start_kubectl k
 		echo 'Kubectl installed!' >> /home/${username}/ilog
 else echo 'Kubectl already installed!' >> /home/${username}/ilog
 fi
@@ -31,6 +36,10 @@ then
     sudo wget -O /usr/local/bin/rke  https://github.com/rancher/rke/releases/download/v1.1.9/rke_linux-amd64
 		sudo chmod +x /usr/local/bin/rke
 		echo 'RKE installed!' >> /home/${username}/ilog
+		# config
+		# config bashrc
+		runuser -l ${username} -c  'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml'
+		echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
 else echo 'RKE already installed!' >> /home/${username}/ilog
 fi
 
@@ -49,12 +58,17 @@ then
 else echo 'SSHpass already installed!' >> /home/${username}/ilog
 fi
 
-runuser -l ${username} -c  'ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ""'
-chmod 600 /home/${username}/.ssh/id_rsa*
-chown ${username}:${username} /home/${username}/.ssh/id_rsa*
+if ! test -f "/home/cachac6/.ssh/id_rsa"
+then
+	runuser -l ${username} -c  "ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ''"
+	chmod 600 /home/${username}/.ssh/id_rsa*
+	chown ${username}:${username} /home/${username}/.ssh/id_rsa*
+	echo 'SSH keys created!' >> /home/${username}/ilog
+else echo 'SSH keys already created!' >> /home/${username}/ilog
+fi
 
-ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip}
-runuser -l ${username} -c 'sshpass -p "password" ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}'
+ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip} >> /home/${username}/ilog
+runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}" >> /home/${username}/ilog
 # runuser -l cachac6 -c 'sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@rke-master01'
 
 # find nodes
@@ -66,8 +80,9 @@ nodes:
     role: [controlplane, worker, etcd]
 "
 echo "Finding  nodes..." >> /home/${username}/ilog
-for node in "rke-master02" "rke-worker01" "rke-worker02"; do
-	echo $node >> /home/${username}/ilog
+for node in "rke-master02" "rke-worker01" "rke-worker02"
+do
+	echo "$node" >> /home/${username}/ilog
 
 	if ping -c 1 $node &> /dev/null
 	then
@@ -93,14 +108,14 @@ for node in "rke-master02" "rke-worker01" "rke-worker02"; do
 		esac
 
 		clusterConfig+=$"
-		  - address: $node
-				internal_address: $ip
-				user: $username
-				role: $role"
+	- address: $node
+		internal_address: $ip
+		user: ${username}
+		role: $role"
 
 		echo "$node ok" >> /home/${username}/ilog
 	else
-		echo "$node offline :(" >> >> /home/${username}/ilog
+		echo "$node offline :(" >> /home/${username}/ilog
 	fi
 done
 
@@ -124,15 +139,7 @@ ingress:
 echo "$clusterConfig" >> /home/${username}/rancher-cluster.yml
 
 # # cluster up # #
-runuser -l ${username} -c 'rke up --config /home/${username}/rancher-cluster.yml' > /home/${username}/rke_log
-
-# config bashrc
-runuser -l ${username} -c  'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml'
-echo 'export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml' >> /home/${username}/.bashrc
-echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
-echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
-echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
-# complete -F __start_kubectl k
+runuser -l ${username} -c "rke up --config /home/${username}/rancher-cluster.yml" > /home/${username}/rke_log
 
 # helm
 
@@ -155,7 +162,8 @@ echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
 
 
 # end
-echo 'End: $SECONDS' >> /home/${username}/ilog
+duration=$SECONDS
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 
 
 

@@ -11,6 +11,48 @@ echo -e "password\npassword\n" | passwd ${username}
 # Master: check ports
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 
+#
+# keepalived + ha
+#
+if ! command -v haproxy &> /dev/null
+then
+	sudo apt install haproxy keepalived -y
+	mkdir -p /etc/keepalived
+
+	sudo mv  /home/${username}/check_apiserver.sh /etc/keepalived/check_apiserver.sh
+	sudo chmod +x /etc/keepalived/check_apiserver.sh
+	sudo mv /home/${username}/keepalived.conf /etc/keepalived/keepalived.conf
+	sudo mv /home/${username}/haproxy.conf /etc/haproxy/haproxy.conf
+
+	sudo systemctl enable keepalived --now
+	sudo systemctl enable haproxy --now
+
+	echo 'haproxy + keepalived installed!' >> /home/${username}/ilog
+else echo 'haproxy + keepalived already installed!' >> /home/${username}/ilog
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sudo swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab

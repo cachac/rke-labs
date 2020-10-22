@@ -119,23 +119,47 @@ resource "google_compute_instance" "rke_master01" {
     )
   }
 
-  # openssl config file
-  # provisioner "file" {
-  #   source      = "${path.module}/openssl.cnf"
-  #   destination = "/home/${local.node_username}/openssl.cnf"
+  # config file
+  provisioner "file" {
+    source      = "${path.module}/files/check_apiserver.sh"
+    destination = "/home/${local.node_username}/check_apiserver.sh"
 
-  #   connection {
-  #     type        = "ssh"
-  #     host        = self.network_interface.0.access_config.0.nat_ip
-  #     user        = local.node_username
-  #     private_key = tls_private_key.global_key.private_key_pem
-  #   }
-  # }
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+	provisioner "file" {
+    source      = "${path.module}/files/keepalived.conf"
+    destination = "/home/${local.node_username}/keepalived.conf"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+		provisioner "file" {
+    source      = "${path.module}/files/haproxy.cfg"
+    destination = "/home/${local.node_username}/haproxy.cfg"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
 
 
   # kubectl alias
   provisioner "file" {
-    source      = "${path.module}/.kubectl_aliases"
+    source      = "${path.module}/files/.kubectl_aliases"
     destination = "/home/${local.node_username}/.kubectl_aliases"
 
     connection {

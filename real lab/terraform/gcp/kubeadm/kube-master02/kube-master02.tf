@@ -15,15 +15,15 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission   = "0600"
 }
 # Networking
-resource "google_compute_address" "rke_external_address02" {
-  name   = "rke-external-address02"
+resource "google_compute_address" "kube_external_address02" {
+  name   = "kube-external-address02"
   region = var.gcp_region
 }
 
 # disk: admin by google
-resource "google_compute_disk" "rke_master_disk02" {
+resource "google_compute_disk" "kube_master_disk02" {
   name  = "master-disk02"
-  image = data.google_compute_image.rke_master_image.self_link
+  image = data.google_compute_image.kube_master_image.self_link
   size  = 10
   type  = "pd-standard"
   zone  = var.gcp_zone
@@ -32,8 +32,8 @@ resource "google_compute_disk" "rke_master_disk02" {
   }
 }
 
-# GCP Compute Instance for creating a single node RKE cluster and installing the Rancher server
-resource "google_compute_instance" "rke_master02" {
+# GCP Compute Instance for creating a single node KUBE cluster and installing the Rancher server
+resource "google_compute_instance" "kube_master02" {
   name         = "${var.prefix}master02"
   machine_type = var.machine_type
   zone         = var.gcp_zone
@@ -43,17 +43,17 @@ resource "google_compute_instance" "rke_master02" {
   }
 
   boot_disk {
-    source      = google_compute_disk.rke_master_disk02.id # "master-disk-db02"
+    source      = google_compute_disk.kube_master_disk02.id # "master-disk-db02"
     auto_delete = false
   }
 
   network_interface {
-    network    = "rke-network"
-    subnetwork = "rke-subnet"
+    network    = "kube-network"
+    subnetwork = "kube-subnet"
     network_ip = "10.0.0.12"
 
     access_config {
-      nat_ip = google_compute_address.rke_external_address02.address
+      nat_ip = google_compute_address.kube_external_address02.address
     }
   }
 
@@ -73,8 +73,8 @@ resource "google_compute_instance" "rke_master02" {
       {
         docker_version = var.docker_version
         username       = local.node_username
-        # node_internal_ip = google_compute_address.rke_internal_address02.address
-        node_public_ip = google_compute_address.rke_external_address02.address
+        # node_internal_ip = google_compute_address.kube_internal_address02.address
+        node_public_ip = google_compute_address.kube_external_address02.address
       }
     )
   }
@@ -145,23 +145,3 @@ resource "google_compute_instance" "rke_master02" {
     }
   }
 }
-
-# using providers
-# module "rancher_common" {
-#   source = "../rancher_common"
-
-#   node_public_ip         = google_compute_instance.rke_master02.network_interface.0.access_config.0.nat_ip
-#   node_internal_ip       = google_compute_instance.rke_master02.network_interface.0.network_ip
-#   node_username          = local.node_username
-#   ssh_private_key_pem    = tls_private_key.global_key.private_key_pem
-#   rke_kubernetes_version = var.rke_kubernetes_version
-
-#   cert_manager_version = var.cert_manager_version
-#   rancher_version      = var.rancher_version
-
-#   rancher_server_dns = join(".", ["rancher", google_compute_instance.rke_master02.network_interface.0.access_config.0.nat_ip, "xip.io"])
-#   admin_password     = var.rancher_server_admin_password
-
-#   workload_kubernetes_version = var.workload_kubernetes_version
-#   workload_cluster_name       = "quickstart-gcp-custom"
-# }

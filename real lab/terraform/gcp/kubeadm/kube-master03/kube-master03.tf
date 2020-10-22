@@ -15,15 +15,15 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission   = "0600"
 }
 # Networking
-resource "google_compute_address" "rke_external_address03" {
-  name   = "rke-external-address03"
+resource "google_compute_address" "kube_external_address03" {
+  name   = "kube-external-address03"
   region = var.gcp_region
 }
 
 # disk: admin by google
-resource "google_compute_disk" "rke_master_disk03" {
+resource "google_compute_disk" "kube_master_disk03" {
   name  = "master-disk03"
-  image = data.google_compute_image.rke_master_image.self_link
+  image = data.google_compute_image.kube_master_image.self_link
   size  = 10
   type  = "pd-standard"
   zone  = var.gcp_zone
@@ -32,8 +32,8 @@ resource "google_compute_disk" "rke_master_disk03" {
   }
 }
 
-# GCP Compute Instance for creating a single node RKE cluster and installing the Rancher server
-resource "google_compute_instance" "rke_master03" {
+# GCP Compute Instance for creating a single node KUBE cluster and installing the Rancher server
+resource "google_compute_instance" "kube_master03" {
   name         = "${var.prefix}master03"
   machine_type = var.machine_type
   zone         = var.gcp_zone
@@ -43,17 +43,17 @@ resource "google_compute_instance" "rke_master03" {
   }
 
   boot_disk {
-    source      = google_compute_disk.rke_master_disk03.id # "master-disk-db03"
+    source      = google_compute_disk.kube_master_disk03.id # "master-disk-db03"
     auto_delete = false
   }
 
   network_interface {
-    network    = "rke-network"
-    subnetwork = "rke-subnet"
+    network    = "kube-network"
+    subnetwork = "kube-subnet"
     network_ip = "10.0.0.13"
 
     access_config {
-      nat_ip = google_compute_address.rke_external_address03.address
+      nat_ip = google_compute_address.kube_external_address03.address
     }
   }
 
@@ -73,8 +73,8 @@ resource "google_compute_instance" "rke_master03" {
       {
         docker_version = var.docker_version
         username       = local.node_username
-        # node_internal_ip = google_compute_address.rke_internal_address03.address
-        node_public_ip = google_compute_address.rke_external_address03.address
+        # node_internal_ip = google_compute_address.kube_internal_address03.address
+        node_public_ip = google_compute_address.kube_external_address03.address
       }
     )
   }

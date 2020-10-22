@@ -24,14 +24,12 @@ then
 	sudo systemctl enable keepalived --now
 	sudo systemctl enable haproxy --now
 
-
-
-
-
 	echo 'haproxy + keepalived installed!' >> /home/${username}/ilog
 else echo 'haproxy + keepalived already installed!' >> /home/${username}/ilog
 fi
-
+# disable swap
+sudo swapoff -a
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
 
 
@@ -42,8 +40,7 @@ fi
 # Master: check ports
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 
-sudo swapoff -a
-sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
 #
 # ip tables
 #
@@ -118,7 +115,7 @@ runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username
 
 # find nodes and share ssh keys
 echo "Finding  nodes..." >> /home/${username}/ilog
-for node in "kube-master02"
+for node in "kube-master02 kube-master03"
 do
 	echo "$node" >> /home/${username}/ilog
 	if ping -c 1 $node &> /dev/null

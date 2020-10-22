@@ -20,35 +20,22 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission   = "0600"
 }
 # Networking
-resource "google_compute_network" "rke_network" {
-  name = "rke-network"
+resource "google_compute_network" "kube_network" {
+  name = "kube-network"
 }
 
-resource "google_compute_subnetwork" "rke_subnet" {
-  name          = "rke-subnet"
+resource "google_compute_subnetwork" "kube_subnet" {
+  name          = "kube-subnet"
   ip_cidr_range = "10.0.0.0/16"
   region        = var.gcp_region
-  network       = google_compute_network.rke_network.id
-}
-
-resource "google_compute_address" "rke_internal_address01" {
-  name         = "rke-internal-address01"
-  subnetwork   = google_compute_subnetwork.rke_subnet.id
-  address_type = "INTERNAL"
-  address      = "10.0.0.11"
-  region       = var.gcp_region
-}
-
-resource "google_compute_address" "rke_external_address01" {
-  name   = "rke-external-address01"
-  region = var.gcp_region
+  network       = google_compute_network.kube_network.id
 }
 
 # ********** WARNING **********
 # Firewall Rule to allow all traffic
-resource "google_compute_firewall" "rke_fw_allowall" {
-  name    = "${var.prefix}rke-allowall"
-  network = google_compute_network.rke_network.id
+resource "google_compute_firewall" "kube_fw_allowall" {
+  name    = "${var.prefix}kube-allowall"
+  network = google_compute_network.kube_network.id
 
   allow {
     protocol = "all"
@@ -57,10 +44,23 @@ resource "google_compute_firewall" "rke_fw_allowall" {
   source_ranges = ["0.0.0.0/0"]
 }
 
+resource "google_compute_address" "kube_internal_address01" {
+  name         = "kube-internal-address01"
+  subnetwork   = "kube-subnet" # google_compute_subnetwork.kube_subnet.id
+  address_type = "INTERNAL"
+  address      = "10.0.0.11"
+  region       = var.gcp_region
+}
+
+resource "google_compute_address" "kube_external_address01" {
+  name   = "kube-external-address01"
+  region = var.gcp_region
+}
+
 # disk: admin by google
-resource "google_compute_disk" "rke_master_disk01" {
+resource "google_compute_disk" "kube_master_disk01" {
   name  = "master-disk01"
-  image = data.google_compute_image.rke_master_image.self_link
+  image = data.google_compute_image.kube_master_image.self_link
   size  = 10
   type  = "pd-standard"
   zone  = var.gcp_zone
@@ -69,9 +69,9 @@ resource "google_compute_disk" "rke_master_disk01" {
   }
 }
 
-# GCP Compute Instance for creating a single node RKE cluster and installing the Rancher server
-resource "google_compute_instance" "rke_master01" {
-  depends_on = [google_compute_firewall.rke_fw_allowall]
+# GCP Compute Instance for creating a single node KUBE cluster and installing the Rancher server
+resource "google_compute_instance" "kube_master01" {
+  depends_on = [google_compute_firewall.kube_fw_allowall]
 
   name         = "${var.prefix}master01"
   machine_type = var.machine_type
@@ -82,17 +82,17 @@ resource "google_compute_instance" "rke_master01" {
   }
 
   boot_disk {
-    source      = google_compute_disk.rke_master_disk01.id # "master-disk-db01"
+    source      = google_compute_disk.kube_master_disk01.id # "master-disk-db01"
     auto_delete = false
   }
 
   network_interface {
-    network    = google_compute_network.rke_network.id
-    subnetwork = google_compute_subnetwork.rke_subnet.id
-    network_ip = google_compute_address.rke_internal_address01.address
+    network    = google_compute_network.kube_network.id
+    subnetwork = google_compute_subnetwork.kube_subnet.id
+    network_ip = google_compute_address.kube_internal_address01.address
 
     access_config {
-      nat_ip = google_compute_address.rke_external_address01.address
+      nat_ip = google_compute_address.kube_external_address01.address
       # "35.238.114.204"
     }
   }
@@ -113,8 +113,8 @@ resource "google_compute_instance" "rke_master01" {
       {
         docker_version = var.docker_version
         username       = local.node_username
-        # node_internal_ip = google_compute_address.rke_internal_address01.address
-        node_public_ip = google_compute_address.rke_external_address01.address
+        # node_internal_ip = google_compute_address.kube_internal_address01.address
+        node_public_ip = google_compute_address.kube_external_address01.address
       }
     )
   }
@@ -132,7 +132,7 @@ resource "google_compute_instance" "rke_master01" {
     }
   }
 
-	provisioner "file" {
+  provisioner "file" {
     source      = "${path.module}/files/keepalived.conf"
     destination = "/home/${local.node_username}/keepalived.conf"
 
@@ -144,7 +144,7 @@ resource "google_compute_instance" "rke_master01" {
     }
   }
 
-		provisioner "file" {
+  provisioner "file" {
     source      = "${path.module}/files/haproxy.cfg"
     destination = "/home/${local.node_username}/haproxy.cfg"
 
@@ -155,7 +155,6 @@ resource "google_compute_instance" "rke_master01" {
       private_key = tls_private_key.global_key.private_key_pem
     }
   }
-
 
   # kubectl alias
   provisioner "file" {
@@ -185,23 +184,3 @@ resource "google_compute_instance" "rke_master01" {
     }
   }
 }
-
-# using providers
-# module "rancher_common" {
-#   source = "../rancher_common"
-
-#   node_public_ip         = google_compute_instance.rke_master01.network_interface.0.access_config.0.nat_ip
-#   node_internal_ip       = google_compute_instance.rke_master01.network_interface.0.network_ip
-#   node_username          = local.node_username
-#   ssh_private_key_pem    = tls_private_key.global_key.private_key_pem
-#   rke_kubernetes_version = var.rke_kubernetes_version
-
-#   cert_manager_version = var.cert_manager_version
-#   rancher_version      = var.rancher_version
-
-#   rancher_server_dns = join(".", ["rancher", google_compute_instance.rke_master01.network_interface.0.access_config.0.nat_ip, "xip.io"])
-#   admin_password     = var.rancher_server_admin_password
-
-#   workload_kubernetes_version = var.workload_kubernetes_version
-#   workload_cluster_name       = "quickstart-gcp-custom"
-# }

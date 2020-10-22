@@ -48,8 +48,8 @@ resource "google_compute_instance" "rke_master02" {
   }
 
   network_interface {
-    network    = "rke_network"
-    subnetwork = "rke_subnet"
+    network    = "rke-network"
+    subnetwork = "rke-subnet"
     network_ip = "10.0.0.12"
 
     access_config {

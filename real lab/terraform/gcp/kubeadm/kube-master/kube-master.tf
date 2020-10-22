@@ -1,7 +1,12 @@
 # https://github.com/mmumshad/kubernetes-the-hard-way
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/
 # https://stackoverflow.com/questions/51246036/is-kubernetes-high-availability-using-kubeadm-possible-without-failover-load-bal
+
+# individual etcd
 # https://medium.com/@bambash/ha-kubernetes-cluster-via-kubeadm-b2133360b198
+
+# stacked control plane:
+# https://www.linuxtechi.com/setup-highly-available-kubernetes-cluster-kubeadm/
 
 # ssh keys
 resource "tls_private_key" "global_key" {

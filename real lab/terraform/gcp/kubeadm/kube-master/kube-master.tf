@@ -1,28 +1,7 @@
-# https://www.terraform.io/docs/providers/google/guides/getting_started.html
-# check: RKE PROVISIONER https://registry.terraform.io/providers/rancher/rke/latest/docs/resources/cluster
-
-# credentials:
-# install gcloud...
-# gcloud auth login
-# gcloud projects list
-# gcloud config set project <kubernetes-292714>
-# create service account:
-# https://console.cloud.google.com/iam-admin/serviceaccounts?project=kubernetes-292714
-# create key using gcloud:
-#gcloud iam service-accounts keys create ~/key.json \
-#  --iam-account terraform-bot@kubernetes-292714.iam.gserviceaccount.com
-# find key in ~/key.json
-# export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
-# add to ~/.bashrc
-
-# terraform init
-# terraform plan
-# terraform apply -auto-approve
-# terraform destroy -target google_compute_instance.rke_master01 -auto-approve
-
-# check: provisioning Rancher cluster: https://medium.com/@chfrank_cgn/building-a-rancher-cluster-on-google-cloud-with-terraform-31f1453fbb31
-# rke GCP: https://rancher.com/docs/rancher/v2.x/en/quick-start-guide/deployment/google-gcp-qs/
-# GCP terraform resourses: https://www.terraform.io/docs/providers/google/r/compute_address.html
+# https://github.com/mmumshad/kubernetes-the-hard-way
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/
+# https://stackoverflow.com/questions/51246036/is-kubernetes-high-availability-using-kubeadm-possible-without-failover-load-bal
+# https://medium.com/@bambash/ha-kubernetes-cluster-via-kubeadm-b2133360b198
 
 # ssh keys
 resource "tls_private_key" "global_key" {
@@ -135,10 +114,22 @@ resource "google_compute_instance" "rke_master01" {
     )
   }
 
-  # rke config file
+  # openssl config file
   provisioner "file" {
-    source      = "${path.module}/rancher-cluster.yml"
-    destination = "/home/${local.node_username}/rancher-cluster.yml"
+    source      = "${path.module}/openssl.cnf"
+    destination = "/home/${local.node_username}/openssl.cnf"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/openssl-etcd.cnf"
+    destination = "/home/${local.node_username}/openssl-etcd.cnf"
 
     connection {
       type        = "ssh"

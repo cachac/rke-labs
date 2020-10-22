@@ -22,7 +22,7 @@ gcp_region = "us-central1"
 gcp_zone = "us-central1-a"
 
 # Prefix for all resources created by quickstart
-prefix = "rke-"
+prefix = "kube-"
 
 # Compute instance size of all created instances
 # machine_type = "e2-standard-2"

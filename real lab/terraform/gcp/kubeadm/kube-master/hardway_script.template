@@ -1,0 +1,200 @@
+#!/bin/bash -x
+date '+%Y/%m/%d %H:%M:%S' > /home/${username}/ilog
+SECONDS=0
+export DEBIAN_FRONTEND=noninteractive
+# root
+sudo usermod -aG sudo ${username}
+echo -e "password\npassword\n" | passwd ${username}
+# docker
+# if ! command -v docker &> /dev/null
+# then
+
+# sudo apt-get update && sudo apt-get install apt-transport-https ca-certificates curl software-properties-common gnupg2 -y
+# curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add --keyring /etc/apt/trusted.gpg.d/docker.gpg -
+# sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu  $(lsb_release -cs)  stable"
+# sudo apt-get update && sudo apt-get install -y \
+# containerd.io=1.2.13-2 \
+# docker-ce=5:19.03.11~3-0~ubuntu-$(lsb_release -cs) \
+# docker-ce-cli=5:19.03.11~3-0~ubuntu-$(lsb_release -cs)
+# cat <<EOF | sudo tee /etc/docker/daemon.json
+# {
+#   "exec-opts": ["native.cgroupdriver=systemd"],
+#   "log-driver": "json-file",
+#   "log-opts": {
+#     "max-size": "100m"
+#   },
+#   "storage-driver": "overlay2"
+# }
+# EOF
+
+# sudo mkdir -p /etc/systemd/system/docker.service.d
+# sudo systemctl daemon-reload
+# sudo systemctl restart docker
+# sudo systemctl enable docker
+
+# sudo usermod -aG docker ${username}
+# newgrp docker
+# echo 'Docker installed!' >> /home/${username}/ilog
+# else echo 'Docker already installed!' >> /home/${username}/ilog
+# fi
+
+# kubectl
+if ! command -v kubectl &> /dev/null
+then
+	wget https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kubectl
+	chmod +x kubectl
+	sudo mv kubectl /usr/local/bin/
+
+	echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
+	echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
+	echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
+	# complete -F __start_kubectl k
+
+	echo 'Kubectl installed!' >> /home/${username}/ilog
+else echo 'Kubectl already installed!' >> /home/${username}/ilog
+fi
+
+# certs
+if ! test -f "/home/${username}/ca.crt"
+then
+	# CA
+	openssl genrsa -out ca.key 2048
+	sudo sed -i '0,/RANDFILE/{s/RANDFILE/\#&/}' /etc/ssl/openssl.cnf
+	openssl req -new -key ca.key -subj "/CN=KUBERNETES-CA" -out ca.csr
+	openssl x509 -req -in ca.csr -signkey ca.key -CAcreateserial  -out ca.crt -days 1000
+	# Admin
+	openssl genrsa -out admin.key 2048
+	openssl req -new -key admin.key -subj "/CN=admin/O=system:masters" -out admin.csr
+	openssl x509 -req -in admin.csr -CA ca.crt -CAkey ca.key -CAcreateserial  -out admin.crt -days 1000
+	# Controller manager
+	openssl genrsa -out kube-controller-manager.key 2048
+	openssl req -new -key kube-controller-manager.key -subj "/CN=system:kube-controller-manager" -out kube-controller-manager.csr
+	openssl x509 -req -in kube-controller-manager.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out kube-controller-manager.crt -days 1000
+	# Kube proxy
+	openssl genrsa -out kube-proxy.key 2048
+	openssl req -new -key kube-proxy.key -subj "/CN=system:kube-proxy" -out kube-proxy.csr
+	openssl x509 -req -in kube-proxy.csr -CA ca.crt -CAkey ca.key -CAcreateserial  -out kube-proxy.crt -days 1000
+	# Scheduler
+	openssl genrsa -out kube-scheduler.key 2048
+	openssl req -new -key kube-scheduler.key -subj "/CN=system:kube-scheduler" -out kube-scheduler.csr
+	openssl x509 -req -in kube-scheduler.csr -CA ca.crt -CAkey ca.key -CAcreateserial  -out kube-scheduler.crt -days 1000
+	# cert for kubeapi server
+	openssl genrsa -out kube-apiserver.key 2048
+	openssl req -new -key kube-apiserver.key -subj "/CN=kube-apiserver" -out kube-apiserver.csr -config openssl.cnf
+	openssl x509 -req -in kube-apiserver.csr -CA ca.crt -CAkey ca.key -CAcreateserial  -out kube-apiserver.crt -extensions v3_req -extfile openssl.cnf -days 1000
+	# certs for etcd
+	openssl genrsa -out etcd-server.key 2048
+	openssl req -new -key etcd-server.key -subj "/CN=etcd-server" -out etcd-server.csr -config openssl-etcd.cnf
+	openssl x509 -req -in etcd-server.csr -CA ca.crt -CAkey ca.key -CAcreateserial  -out etcd-server.crt -extensions v3_req -extfile openssl-etcd.cnf -days 1000
+	# SA
+	openssl genrsa -out service-account.key 2048
+	openssl req -new -key service-account.key -subj "/CN=service-accounts" -out service-account.csr
+	openssl x509 -req -in service-account.csr -CA ca.crt -CAkey ca.key -CAcreateserial  -out service-account.crt -days 1000
+	# dist certs
+	# kube-master02...
+	for instance in rke-master01; do
+		scp ca.crt ca.key kube-apiserver.key kube-apiserver.crt \
+			service-account.key service-account.crt \
+			etcd-server.key etcd-server.crt \
+			$instance:~/
+	done
+	echo 'Certs created and distr!' >> /home/${username}/ilog
+else echo 'Certs already created and distr!' >> /home/${username}/ilog
+fi
+
+
+
+# kubeadm
+# if ! command -v kubeadm &> /dev/null
+# then
+# sudo apt-get update && sudo apt-get install -y apt-transport-https curl
+# curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+# cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+# deb https://apt.kubernetes.io/ kubernetes-xenial main
+# EOF
+# sudo apt-get update
+# sudo apt-get install -y kubelet kubeadm kubectl
+# sudo apt-mark hold kubelet kubeadm kubectl
+# #
+# echo 'Kubeadm installed!' >> /home/${username}/ilog
+# else echo 'Kubeadm already installed!' >> /home/${username}/ilog
+# fi
+
+#
+# check ports
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+# copy ssh between nodes
+sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
+systemctl reload sshd
+# copy ssh key's
+if ! command -v sshpass &> /dev/null
+then
+		sudo apt-get install sshpass
+		echo 'SSHpass installed!' >> /home/${username}/ilog
+else echo 'SSHpass already installed!' >> /home/${username}/ilog
+fi
+
+if ! test -f "/home/${username}/.ssh/id_rsa"
+then
+	runuser -l ${username} -c  "ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ''"
+	chmod 600 /home/${username}/.ssh/id_rsa*
+	chown ${username}:${username} /home/${username}/.ssh/id_rsa*
+	echo 'SSH keys created!' >> /home/${username}/ilog
+else echo 'SSH keys already created!' >> /home/${username}/ilog
+fi
+
+ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip} >> /home/${username}/ilog
+runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}" >> /home/${username}/ilog
+# runuser -l cachac6 -c 'sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@rke-master01'
+
+# find nodes and share ssh keys
+# echo "Finding  nodes..." >> /home/${username}/ilog
+# for node in "rke-master02" "rke-worker01" "rke-worker02"
+# do
+# 	echo "$node" >> /home/${username}/ilog
+# 	if ping -c 1 $node &> /dev/null
+# 	then
+# 		# conecta al nodo y agrega ssh
+# 		ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R $node >> /home/${username}/ilog
+# 		runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@$node" >> /home/${username}/ilog
+# 		ssh ${username}@$node "ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip}" >> /home/${username}/ilog
+# 		ssh ${username}@$node "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}" >> /home/${username}/ilog
+# 		echo "$node ok" >> /home/${username}/ilog
+# 	else
+# 		echo "$node offline :(" >> /home/${username}/ilog
+# 	fi
+# done
+
+#
+# launch kluster
+#
+
+
+# helm
+
+# lets encrypt
+
+# nginx controller
+
+#
+# apps config
+#
+
+# deployment
+
+# cluster IP
+
+# ingress
+
+# extra: MetalLB
+# extra Rancher
+
+
+# end
+duration=$SECONDS
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+
+
+

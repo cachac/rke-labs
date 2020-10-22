@@ -25,8 +25,8 @@ gcp_zone = "us-central1-a"
 prefix = "kube-"
 
 # Compute instance size of all created instances
-# machine_type = "e2-standard-2"
-machine_type = "e2-medium"
+machine_type = "e2-standard-2"
+# machine_type = "e2-medium"
 
 # Docker version installed on target hosts
 # - Must be a version supported by the Rancher install scripts

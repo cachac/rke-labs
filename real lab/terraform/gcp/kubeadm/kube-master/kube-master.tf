@@ -115,29 +115,18 @@ resource "google_compute_instance" "rke_master01" {
   }
 
   # openssl config file
-  provisioner "file" {
-    source      = "${path.module}/openssl.cnf"
-    destination = "/home/${local.node_username}/openssl.cnf"
+  # provisioner "file" {
+  #   source      = "${path.module}/openssl.cnf"
+  #   destination = "/home/${local.node_username}/openssl.cnf"
 
-    connection {
-      type        = "ssh"
-      host        = self.network_interface.0.access_config.0.nat_ip
-      user        = local.node_username
-      private_key = tls_private_key.global_key.private_key_pem
-    }
-  }
+  #   connection {
+  #     type        = "ssh"
+  #     host        = self.network_interface.0.access_config.0.nat_ip
+  #     user        = local.node_username
+  #     private_key = tls_private_key.global_key.private_key_pem
+  #   }
+  # }
 
-  provisioner "file" {
-    source      = "${path.module}/openssl-etcd.cnf"
-    destination = "/home/${local.node_username}/openssl-etcd.cnf"
-
-    connection {
-      type        = "ssh"
-      host        = self.network_interface.0.access_config.0.nat_ip
-      user        = local.node_username
-      private_key = tls_private_key.global_key.private_key_pem
-    }
-  }
 
   # kubectl alias
   provisioner "file" {

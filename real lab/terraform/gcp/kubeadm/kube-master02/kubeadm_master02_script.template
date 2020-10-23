@@ -22,7 +22,10 @@ then
 	sudo mv  /home/${username}/check_apiserver.sh /etc/keepalived/check_apiserver.sh
 	sudo chmod +x /etc/keepalived/check_apiserver.sh
 	sudo mv /home/${username}/keepalived.conf /etc/keepalived/keepalived.conf
-	sudo mv /home/${username}/haproxy.conf /etc/haproxy/haproxy.conf
+	sudo mv /home/${username}/haproxy.cfg /etc/haproxy/haproxy.cfg
+
+	sudo systemctl restart haproxy
+	sudo systemctl restart keepalived
 
 	sudo systemctl enable keepalived --now
 	sudo systemctl enable haproxy --now
@@ -33,26 +36,6 @@ fi
 # disable swap
 sudo swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #
 # ip tables
 #
@@ -83,7 +66,8 @@ cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-get install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+sudo systemctl enable kubelet --now
 sudo apt-mark hold kubelet kubeadm kubectl
 apt-get install bash-completion
 
@@ -97,87 +81,6 @@ apt-get install bash-completion
 	echo 'kubeadm installed!' >> /home/${username}/ilog
 else echo 'kubeadm already installed!' >> /home/${username}/ilog
 fi
-
-#
-# SSH
-#
-sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
-sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
-systemctl reload sshd
-# ssh key's
-if ! command -v sshpass &> /dev/null
-then
-		sudo apt-get install sshpass
-		echo 'SSHpass installed!' >> /home/${username}/ilog
-else echo 'SSHpass already installed!' >> /home/${username}/ilog
-fi
-
-if ! test -f "/home/${username}/.ssh/id_rsa"
-then
-	runuser -l ${username} -c  "ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ''"
-	chmod 600 /home/${username}/.ssh/id_rsa*
-	chown ${username}:${username} /home/${username}/.ssh/id_rsa*
-	echo 'SSH keys created!' >> /home/${username}/ilog
-else echo 'SSH keys already created!' >> /home/${username}/ilog
-fi
-
-ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip} >> /home/${username}/ilog
-runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}" >> /home/${username}/ilog
-# runuser -l cachac6 -c 'sshpass -p "password" ssh-copy-id -i /home/cachac6/.ssh/id_rsa.pub -o StrictHostKeyChecking=no cachac6@rke-master01'
-
-# find nodes and share ssh keys
-echo "Finding  nodes..." >> /home/${username}/ilog
-for node in "kube-master01 kube-master03"
-do
-	echo "$node" >> /home/${username}/ilog
-	if ping -c 1 $node &> /dev/null
-	then
-		# conecta al nodo y agrega ssh
-		ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R $node >> /home/${username}/ilog
-		runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@$node" >> /home/${username}/ilog
-		ssh ${username}@$node "ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip}" >> /home/${username}/ilog
-		ssh ${username}@$node "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}" >> /home/${username}/ilog
-		echo "$node ok" >> /home/${username}/ilog
-	else
-		echo "$node offline :(" >> /home/${username}/ilog
-	fi
-done
-
-#
-# launch kluster
-#
-#
-# Load Balancer
-#
-#kubeadm init --control-plane-endpoint="10.0.0.2:6443" --upload-certs --apiserver-advertise-address=10.0.0.11 --pod-network-cidr=192.168.0.0/16
-#kubectl --kubeconfig=/etc/kubernetes/admin.conf create -f https://docs.projectcalico.org/v3.15/manifests/calico.yaml
-
-# sudo docker run --network host --rm plndr/kube-vip:0.1.8 kubeadm init \
-# --interface ens4 \
-# --vip 10.0.0.11 \
-# --arp \
-# --leaderElection | sudo tee /etc/kubernetes/manifests/vip.yaml
-
-#sudo kubeadm init --control-plane-endpoint 10.0.0.11 --upload-certs
-
-# helm
-
-# lets encrypt
-
-# nginx controller
-
-#
-# apps config
-#
-
-# deployment
-
-# cluster IP
-
-# ingress
-
-# extra: MetalLB
-# extra Rancher
 
 
 # end

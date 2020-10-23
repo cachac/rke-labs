@@ -46,7 +46,7 @@ resource "google_compute_firewall" "kube_fw_allowall" {
 
 resource "google_compute_address" "kube_internal_address01" {
   name         = "kube-internal-address01"
-  subnetwork   = "kube-subnet" # google_compute_subnetwork.kube_subnet.id
+  subnetwork   =  google_compute_subnetwork.kube_subnet.id
   address_type = "INTERNAL"
   address      = "10.0.0.11"
   region       = var.gcp_region

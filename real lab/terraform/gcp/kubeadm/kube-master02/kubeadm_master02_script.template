@@ -5,7 +5,6 @@ export DEBIAN_FRONTEND=noninteractive
 # root
 sudo usermod -aG sudo ${username}
 echo -e "password\npassword\n" | passwd ${username}
-
 # monitoring
 # gcloud beta compute ssh kube-master01 --project=kubernetes-292714 --zone=us-central1-a --command="curl -sSO https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh && sudo bash add-monitoring-agent-repo.sh && sudo apt-get update && sudo apt-get install stackdriver-agent && sudo service stackdriver-agent start"
 #
@@ -15,26 +14,28 @@ echo -e "password\npassword\n" | passwd ${username}
 #
 # keepalived + ha
 #
-# if ! command -v haproxy &> /dev/null
-# then
-# 	sudo apt install haproxy keepalived -y
-# 	mkdir -p /etc/keepalived
+if ! command -v haproxy &> /dev/null
+then
+	sudo apt install haproxy keepalived -y
+	mkdir -p /etc/keepalived
 
-# 	sudo mv  /home/${username}/check_apiserver.sh /etc/keepalived/check_apiserver.sh
-# 	sudo chmod +x /etc/keepalived/check_apiserver.sh
-# 	sudo mv /home/${username}/keepalived.conf /etc/keepalived/keepalived.conf
-# 	sudo mv /home/${username}/haproxy.cfg /etc/haproxy/haproxy.cfg
-    sudo cat /home/${username}/hosts >> /etc/hosts
+	sudo mv  /home/${username}/takeover.sh /etc/keepalived/takeover.sh
+	sudo chmod +x /etc/keepalived/takeover.sh
+	touch /etc/keepalived/takeover.log
 
-# 	sudo systemctl restart haproxy
-# 	sudo systemctl restart keepalived
+	sudo mv /home/${username}/keepalived.conf /etc/keepalived/keepalived.conf
 
-# 	sudo systemctl enable keepalived --now
-# 	sudo systemctl enable haproxy --now
+	sudo mv /home/${username}/haproxy.cfg /etc/haproxy/haproxy.cfg
+  sudo cat /home/${username}/hosts >> /etc/hosts
 
-# 	echo 'haproxy + keepalived installed!' >> /home/${username}/ilog
-# else echo 'haproxy + keepalived already installed!' >> /home/${username}/ilog
-# fi
+	sudo systemctl restart haproxy
+	sudo systemctl restart keepalived
+	sudo systemctl enable keepalived --now
+	sudo systemctl enable haproxy --now
+
+	echo 'haproxy + keepalived installed!' >> /home/${username}/ilog
+else echo 'haproxy + keepalived already installed!' >> /home/${username}/ilog
+fi
 # disable swap
 sudo swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
@@ -72,10 +73,10 @@ cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl # --disableexcludes=kubernetes
+sudo apt-get install -y kubelet kubeadm kubectl #--disableexcludes=kubernetes
 sudo systemctl enable kubelet --now
-sudo apt-mark hold kubelet kubeadm kubectl
-apt-get install bash-completion
+# sudo apt-mark hold kubelet kubeadm kubectl
+sudo apt-get install bash-completion
 
 	echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
 	echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
@@ -91,6 +92,3 @@ fi
 # end
 duration=$SECONDS
 echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."  >> /home/${username}/ilog
-
-
-

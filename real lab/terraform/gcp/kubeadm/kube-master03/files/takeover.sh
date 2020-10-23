@@ -14,8 +14,8 @@ done
 
 # Assign IP aliases to me because now I am the MASTER!
 gcloud compute instances network-interfaces update ${KUBE_PRIMARY} \
-  --zone="us-central1-a" \
-  --aliases "10.0.0.3" >> /etc/keepalived/takeover.log 2>&1
+	--zone="us-central1-a" \
+	--aliases "10.0.0.3" >> /etc/keepalived/takeover.log 2>&1
 sleep 5
 
 systemctl restart haproxy

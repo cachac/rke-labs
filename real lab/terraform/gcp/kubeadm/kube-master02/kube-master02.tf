@@ -17,7 +17,7 @@ resource "local_file" "ssh_private_key_pem" {
 # Networking
 resource "google_compute_address" "kube_internal_address02" {
   name         = "kube-internal-address02"
-  subnetwork   = google_compute_subnetwork.kube_subnet.id
+  subnetwork   = "kube-subnet"
   address_type = "INTERNAL"
   address      = "10.0.0.12"
   region       = var.gcp_region
@@ -102,8 +102,8 @@ resource "google_compute_instance" "kube_master02" {
   }
 
   provisioner "file" {
-    source      = "${path.module}/files/check_apiserver.sh"
-    destination = "/home/${local.node_username}/check_apiserver.sh"
+    source      = "${path.module}/files/takeover.sh"
+    destination = "/home/${local.node_username}/takeover.sh"
 
     connection {
       type        = "ssh"

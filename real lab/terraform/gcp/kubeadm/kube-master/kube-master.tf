@@ -143,8 +143,8 @@ resource "google_compute_instance" "kube_master01" {
   }
 
   provisioner "file" {
-    source      = "${path.module}/files/check_apiserver.sh"
-    destination = "/home/${local.node_username}/check_apiserver.sh"
+    source      = "${path.module}/files/takeover.sh"
+    destination = "/home/${local.node_username}/takeover.sh"
 
     connection {
       type        = "ssh"

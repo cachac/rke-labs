@@ -12,7 +12,7 @@ resource "local_file" "ssh_private_key_pem" {
 # Networking
 resource "google_compute_address" "kube_internal_address03" {
   name         = "kube-internal-address03"
-  subnetwork   =  google_compute_subnetwork.kube_subnet.id
+  subnetwork   =  "kube-subnet"
   address_type = "INTERNAL"
   address      = "10.0.0.13"
   region       = var.gcp_region

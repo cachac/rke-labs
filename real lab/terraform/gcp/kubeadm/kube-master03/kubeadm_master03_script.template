@@ -19,10 +19,14 @@ then
 	sudo apt install haproxy keepalived -y
 	mkdir -p /etc/keepalived
 
-	sudo mv  /home/${username}/check_apiserver.sh /etc/keepalived/check_apiserver.sh
-	sudo chmod +x /etc/keepalived/check_apiserver.sh
+	sudo mv  /home/${username}/takeover.sh /etc/keepalived/takeover.sh
+	sudo chmod +x /etc/keepalived/takeover.sh
+	touch /etc/keepalived/takeover.log
+
 	sudo mv /home/${username}/keepalived.conf /etc/keepalived/keepalived.conf
+
 	sudo mv /home/${username}/haproxy.cfg /etc/haproxy/haproxy.cfg
+  sudo cat /home/${username}/hosts >> /etc/hosts
 
 	sudo systemctl restart haproxy
 	sudo systemctl restart keepalived
@@ -43,6 +47,10 @@ net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 EOF
 sudo sysctl --system
+
+sudo modprobe br_netfilter
+sudo sh -c "echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables"
+sudo sh -c "echo '1' > /proc/sys/net/ipv4/ip_forward"
 
 # docker
 if ! command -v docker &> /dev/null
@@ -65,10 +73,10 @@ cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+sudo apt-get install -y kubelet kubeadm kubectl #--disableexcludes=kubernetes
 sudo systemctl enable kubelet --now
 sudo apt-mark hold kubelet kubeadm kubectl
-apt-get install bash-completion
+sudo apt-get install bash-completion
 
 	echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
 	echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
@@ -81,10 +89,10 @@ apt-get install bash-completion
 else echo 'kubeadm already installed!' >> /home/${username}/ilog
 fi
 
-
 # end
 duration=$SECONDS
-echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."  >> /home/${username}/ilog
+
 
 
 

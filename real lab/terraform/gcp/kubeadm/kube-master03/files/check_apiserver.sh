@@ -1,4 +1,3 @@
-[kadmin@k8s-master-1 ~]$ sudo vi /etc/keepalived/check_apiserver.sh
 #!/bin/sh
 APISERVER_VIP=10.0.0.3
 APISERVER_DEST_PORT=6443

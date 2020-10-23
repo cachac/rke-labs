@@ -5,6 +5,7 @@ export DEBIAN_FRONTEND=noninteractive
 # root
 sudo usermod -aG sudo ${username}
 echo -e "password\npassword\n" | passwd ${username}
+
 # monitoring
 # gcloud beta compute ssh kube-master01 --project=kubernetes-292714 --zone=us-central1-a --command="curl -sSO https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh && sudo bash add-monitoring-agent-repo.sh && sudo apt-get update && sudo apt-get install stackdriver-agent && sudo service stackdriver-agent start"
 #
@@ -14,25 +15,26 @@ echo -e "password\npassword\n" | passwd ${username}
 #
 # keepalived + ha
 #
-if ! command -v haproxy &> /dev/null
-then
-	sudo apt install haproxy keepalived -y
-	mkdir -p /etc/keepalived
+# if ! command -v haproxy &> /dev/null
+# then
+# 	sudo apt install haproxy keepalived -y
+# 	mkdir -p /etc/keepalived
 
-	sudo mv  /home/${username}/check_apiserver.sh /etc/keepalived/check_apiserver.sh
-	sudo chmod +x /etc/keepalived/check_apiserver.sh
-	sudo mv /home/${username}/keepalived.conf /etc/keepalived/keepalived.conf
-	sudo mv /home/${username}/haproxy.cfg /etc/haproxy/haproxy.cfg
+# 	sudo mv  /home/${username}/check_apiserver.sh /etc/keepalived/check_apiserver.sh
+# 	sudo chmod +x /etc/keepalived/check_apiserver.sh
+# 	sudo mv /home/${username}/keepalived.conf /etc/keepalived/keepalived.conf
+# 	sudo mv /home/${username}/haproxy.cfg /etc/haproxy/haproxy.cfg
+    sudo cat /home/${username}/hosts >> /etc/hosts
 
-	sudo systemctl restart haproxy
-	sudo systemctl restart keepalived
+# 	sudo systemctl restart haproxy
+# 	sudo systemctl restart keepalived
 
-	sudo systemctl enable keepalived --now
-	sudo systemctl enable haproxy --now
+# 	sudo systemctl enable keepalived --now
+# 	sudo systemctl enable haproxy --now
 
-	echo 'haproxy + keepalived installed!' >> /home/${username}/ilog
-else echo 'haproxy + keepalived already installed!' >> /home/${username}/ilog
-fi
+# 	echo 'haproxy + keepalived installed!' >> /home/${username}/ilog
+# else echo 'haproxy + keepalived already installed!' >> /home/${username}/ilog
+# fi
 # disable swap
 sudo swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
@@ -44,6 +46,10 @@ net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 EOF
 sudo sysctl --system
+
+sudo modprobe br_netfilter
+sudo sh -c "echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables"
+sudo sh -c "echo '1' > /proc/sys/net/ipv4/ip_forward"
 
 # docker
 if ! command -v docker &> /dev/null
@@ -66,7 +72,7 @@ cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+sudo apt-get install -y kubelet kubeadm kubectl # --disableexcludes=kubernetes
 sudo systemctl enable kubelet --now
 sudo apt-mark hold kubelet kubeadm kubectl
 apt-get install bash-completion
@@ -82,10 +88,9 @@ apt-get install bash-completion
 else echo 'kubeadm already installed!' >> /home/${username}/ilog
 fi
 
-
 # end
 duration=$SECONDS
-echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."  >> /home/${username}/ilog
 
 
 

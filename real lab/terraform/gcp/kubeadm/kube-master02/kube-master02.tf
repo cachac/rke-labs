@@ -15,10 +15,18 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission   = "0600"
 }
 # Networking
+resource "google_compute_address" "kube_internal_address02" {
+  name         = "kube-internal-address02"
+  subnetwork   = google_compute_subnetwork.kube_subnet.id
+  address_type = "INTERNAL"
+  address      = "10.0.0.12"
+  region       = var.gcp_region
+}
 resource "google_compute_address" "kube_external_address02" {
   name   = "kube-external-address02"
   region = var.gcp_region
 }
+
 
 # disk: admin by google
 resource "google_compute_disk" "kube_master_disk02" {
@@ -50,7 +58,8 @@ resource "google_compute_instance" "kube_master02" {
   network_interface {
     network    = "kube-network"
     subnetwork = "kube-subnet"
-    network_ip = "10.0.0.12"
+    network_ip = google_compute_address.kube_internal_address02.address
+    # network_ip = "10.0.0.12"
 
     access_config {
       nat_ip = google_compute_address.kube_external_address02.address
@@ -80,6 +89,18 @@ resource "google_compute_instance" "kube_master02" {
   }
 
   # config file
+  provisioner "file" {
+    source      = "${path.module}/files/hosts"
+    destination = "/home/${local.node_username}/hosts"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
   provisioner "file" {
     source      = "${path.module}/files/check_apiserver.sh"
     destination = "/home/${local.node_username}/check_apiserver.sh"

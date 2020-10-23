@@ -1,8 +1,3 @@
-# https://github.com/mmumshad/kubernetes-the-hard-way
-# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/
-# https://stackoverflow.com/questions/51246036/is-kubernetes-high-availability-using-kubeadm-possible-without-failover-load-bal
-# https://medium.com/@bambash/ha-kubernetes-cluster-via-kubeadm-b2133360b198
-
 # ssh keys
 resource "tls_private_key" "global_key" {
   algorithm = "RSA"
@@ -15,6 +10,13 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission   = "0600"
 }
 # Networking
+resource "google_compute_address" "kube_internal_address03" {
+  name         = "kube-internal-address03"
+  subnetwork   =  google_compute_subnetwork.kube_subnet.id
+  address_type = "INTERNAL"
+  address      = "10.0.0.13"
+  region       = var.gcp_region
+}
 resource "google_compute_address" "kube_external_address03" {
   name   = "kube-external-address03"
   region = var.gcp_region
@@ -50,7 +52,8 @@ resource "google_compute_instance" "kube_master03" {
   network_interface {
     network    = "kube-network"
     subnetwork = "kube-subnet"
-    network_ip = "10.0.0.13"
+    network_ip = google_compute_address.kube_internal_address03.address
+    # network_ip = "10.0.0.13"
 
     access_config {
       nat_ip = google_compute_address.kube_external_address03.address
@@ -81,8 +84,8 @@ resource "google_compute_instance" "kube_master03" {
 
   # config file
   provisioner "file" {
-    source      = "${path.module}/files/check_apiserver.sh"
-    destination = "/home/${local.node_username}/check_apiserver.sh"
+    source      = "${path.module}/files/hosts"
+    destination = "/home/${local.node_username}/hosts"
 
     connection {
       type        = "ssh"
@@ -92,7 +95,19 @@ resource "google_compute_instance" "kube_master03" {
     }
   }
 
-	provisioner "file" {
+  provisioner "file" {
+    source      = "${path.module}/files/takeover.sh"
+    destination = "/home/${local.node_username}/takeover.sh"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
     source      = "${path.module}/files/keepalived.conf"
     destination = "/home/${local.node_username}/keepalived.conf"
 
@@ -104,7 +119,7 @@ resource "google_compute_instance" "kube_master03" {
     }
   }
 
-		provisioner "file" {
+  provisioner "file" {
     source      = "${path.module}/files/haproxy.cfg"
     destination = "/home/${local.node_username}/haproxy.cfg"
 

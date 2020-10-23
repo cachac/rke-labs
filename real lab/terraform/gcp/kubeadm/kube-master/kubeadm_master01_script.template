@@ -5,30 +5,35 @@ export DEBIAN_FRONTEND=noninteractive
 # root
 sudo usermod -aG sudo ${username}
 echo -e "password\npassword\n" | passwd ${username}
+
+touch /etc/keepalived/takeover.log
+chmod +x /etc/keepalived/takeover.sh
 # monitoring
 # gcloud beta compute ssh kube-master01 --project=kubernetes-292714 --zone=us-central1-a --command="curl -sSO https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh && sudo bash add-monitoring-agent-repo.sh && sudo apt-get update && sudo apt-get install stackdriver-agent && sudo service stackdriver-agent start"
 
 #
 # keepalived + ha
 #
-if ! command -v haproxy &> /dev/null
-then
-	sudo apt install haproxy keepalived -y
-	mkdir -p /etc/keepalived
+# if ! command -v haproxy &> /dev/null
+# then
+# 	sudo apt install haproxy keepalived -y
+# 	mkdir -p /etc/keepalived
 
-	sudo mv  /home/${username}/check_apiserver.sh /etc/keepalived/check_apiserver.sh
-	sudo chmod +x /etc/keepalived/check_apiserver.sh
-	sudo mv /home/${username}/keepalived.conf /etc/keepalived/keepalived.conf
-	sudo mv /home/${username}/haproxy.cfg /etc/haproxy/haproxy.cfg
+# 	sudo mv  /home/${username}/check_apiserver.sh /etc/keepalived/check_apiserver.sh
+# 	sudo chmod +x /etc/keepalived/check_apiserver.sh
+# 	sudo mv /home/${username}/keepalived.conf /etc/keepalived/keepalived.conf
+# 	sudo mv /home/${username}/haproxy.cfg /etc/haproxy/haproxy.cfg
 
-	sudo systemctl restart haproxy
-	sudo systemctl restart keepalived
-	sudo systemctl enable keepalived --now
-	sudo systemctl enable haproxy --now
+    #sudo cat /home/${username}/hosts >> /etc/hosts
 
-	echo 'haproxy + keepalived installed!' >> /home/${username}/ilog
-else echo 'haproxy + keepalived already installed!' >> /home/${username}/ilog
-fi
+# 	sudo systemctl restart haproxy
+# 	sudo systemctl restart keepalived
+# 	sudo systemctl enable keepalived --now
+# 	sudo systemctl enable haproxy --now
+
+# 	echo 'haproxy + keepalived installed!' >> /home/${username}/ilog
+# else echo 'haproxy + keepalived already installed!' >> /home/${username}/ilog
+# fi
 # disable swap
 sudo swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
@@ -46,9 +51,9 @@ sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 # sudo firewall-cmd --permanent --add-port=179/tcp
 # sudo firewall-cmd --permanent --add-port=4789/udp
 # sudo firewall-cmd --reload
-# sudo modprobe br_netfilter
-# sudo sh -c "echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables"
-# sudo sh -c "echo '1' > /proc/sys/net/ipv4/ip_forward"
+sudo modprobe br_netfilter
+sudo sh -c "echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables"
+sudo sh -c "echo '1' > /proc/sys/net/ipv4/ip_forward"
 
 #
 # ip tables
@@ -80,9 +85,9 @@ cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+sudo apt-get install -y kubelet kubeadm kubectl #--disableexcludes=kubernetes
 sudo systemctl enable kubelet --now
-sudo apt-mark hold kubelet kubeadm kubectl
+# sudo apt-mark hold kubelet kubeadm kubectl
 apt-get install bash-completion
 
 	echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
@@ -97,17 +102,17 @@ fi
 #
 # kubeadm init
 #
-sudo kubeadm init --control-plane-endpoint "vip-k8s-master:8443" --upload-certs
-mkdir -p /home/${username}/.kube
-sudo cp -i /etc/kubernetes/admin.conf /home/${username}/.kube/config
-sudo chown ${username}:${username} /home/${username}/.kube/config
-runuser -l ${username} -c 'export KUBECONFIG=/home/${username}/.kube/config'
-kubectl apply -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
+# sudo kubeadm init --control-plane-endpoint "vip-k8s-master:8443" --upload-certs
+# mkdir -p /home/${username}/.kube
+# sudo cp -i /etc/kubernetes/admin.conf /home/${username}/.kube/config
+# sudo chown ${username}:${username} /home/${username}/.kube/config
+# runuser -l ${username} -c "export KUBECONFIG=/home/${username}/.kube/config"
+# kubectl apply -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
 
 
 # end
 duration=$SECONDS
-echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."  >> /home/${username}/ilog
 
 
 

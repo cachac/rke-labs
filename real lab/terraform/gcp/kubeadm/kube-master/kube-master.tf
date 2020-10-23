@@ -8,6 +8,8 @@
 # stacked control plane:
 # https://www.linuxtechi.com/setup-highly-available-kubernetes-cluster-kubeadm/
 
+# gcp keepalive: https://geko.cloud/how-to-set-up-a-high-availability-haproxy-in-google-cloud-keepalived/
+
 # ssh keys
 resource "tls_private_key" "global_key" {
   algorithm = "RSA"
@@ -46,9 +48,17 @@ resource "google_compute_firewall" "kube_fw_allowall" {
 
 resource "google_compute_address" "kube_internal_address01" {
   name         = "kube-internal-address01"
-  subnetwork   =  google_compute_subnetwork.kube_subnet.id
+  subnetwork   = google_compute_subnetwork.kube_subnet.id
   address_type = "INTERNAL"
   address      = "10.0.0.11"
+  region       = var.gcp_region
+}
+
+resource "google_compute_address" "kube_vip" {
+  name         = "kube-vip"
+  subnetwork   = google_compute_subnetwork.kube_subnet.id
+  address_type = "INTERNAL"
+  address      = "10.0.0.3"
   region       = var.gcp_region
 }
 
@@ -120,6 +130,18 @@ resource "google_compute_instance" "kube_master01" {
   }
 
   # config file
+  provisioner "file" {
+    source      = "${path.module}/files/hosts"
+    destination = "/home/${local.node_username}/hosts"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
   provisioner "file" {
     source      = "${path.module}/files/check_apiserver.sh"
     destination = "/home/${local.node_username}/check_apiserver.sh"

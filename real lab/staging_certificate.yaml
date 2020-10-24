@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: ranchertest-tk
-  namespace: default
+  # namespace: default
 spec:
   secretName: ranchertest-tk-tls
   # duration: 2160h # 90d
@@ -21,8 +21,9 @@ spec:
   #   - client auth
   # At least one of a DNS Name, URI, or IP address is required.
   dnsNames:
-  - ranchertest.tk
-  - www.ranchertest.tk
+  # - ranchertest.tk
+  # - www.ranchertest.tk
+  - lab.ranchertest.tk
   # uris:
   # - spiffe://cluster.local/ns/default/sa/example
   # ipAddresses:

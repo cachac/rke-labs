@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
@@ -11,16 +11,21 @@ metadata:
   # namespace: kube-verify
 spec:
   rules:
-  - host: ranchertest.tk
+  - host: lab.ranchertest.tk
     http:
       paths:
-      - backend:
-          serviceName: kube-verify
-          servicePort: 8081
-        path: /
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kube-verify
+            port:
+              number: 8081
+
   tls: # < placing a host in the TLS config will indicate a certificate should be created
   - hosts:
-      - ranchertest.tk
-      - www.ranchertest.tk
+      # - ranchertest.tk
+      # - www.ranchertest.tk
+      - lab.ranchertest.tk
     secretName: ranchertest-tk-tls # < cert-manager will store the created certificate in this secret.
 

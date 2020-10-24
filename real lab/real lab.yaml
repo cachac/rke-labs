@@ -38,6 +38,7 @@ curl <EXTERNAL-IP>
 # Ingress crontroller
 # check option ingress + cert + helm:
 https://cert-manager.io/docs/tutorials/acme/ingress/
+  # using helm: https://github.com/kubernetes/ingress-nginx/tree/master/charts/ingress-nginx
 # la opción del link anterior muestra un external LB, probar.
 
 #
@@ -81,6 +82,9 @@ kubectl logs -n cert-manager deploy/cert-manager -f
 kubectl create -f staging_certificate.yml
 # check cert
 kubectl describe certificate ranchertest-tk
+# check csr
+kd  certificaterequest
+
 
 # ingress controller
 # rke create a default ingress controller
@@ -88,7 +92,20 @@ kubectl describe certificate ranchertest-tk
 #
 # option: NGINX ingress controller option ( USER DAEMON SET ) without cert manager
 #
-https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/
+# option 1: helm: https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-helm/
+git clone https://github.com/nginxinc/kubernetes-ingress/
+cd kubernetes-ingress/deployments/helm-chart
+git checkout v1.9.0
+helm repo add nginx-stable https://helm.nginx.com/stable
+helm repo update
+helm install my-release nginx-stable/nginx-ingress
+
+
+
+
+
+
+# option 2: manifest: https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/
 
 # sa - rbac - secrets - cm - deploy
 kubectl apply -f common/ns-and-sa.yaml

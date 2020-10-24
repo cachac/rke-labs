@@ -1,25 +1,32 @@
 #!/bin/bash
 
-# /usr/bin/start_prem
-# sudo chmod +x /usr/bin/start_prem
+# /usr/bin/start_preem
+# sudo chmod +x /usr/bin/start_preem
 
 # run as a deamon
-# /etc/systemd/system/start_prem.service
-# systemctl start start_prem.service
-# systemctl enable start_prem.service
+# /etc/systemd/system/start_preem.service
+# systemctl start start_preem.service
+# systemctl enable start_preem.service
 
 # gcloud config set account  birdscodeinfo@gmail.com
 # gcloud auth activate-service-account --key-file /home/${username}/key.json
+export TZ="America/Costa_Rica"
+date +%z
 
+if ! test -f /var/log/start_preem.log; then
+	touch /var/log/start_preem.log
+fi
 
-echo "Starting Daemon" >> /var/log/start_prem.log
-touch /var/log/start_prem.log
+echo "Starting Daemon" >> /var/log/start_preem.log
+date "+%Y/%m/%d %H:%M:%S +%z" >> /var/log/start_preem.log
+echo "------------------------------" >> /var/log/start_preem.log
 
 while true; do
 	for node in "kube-master01" "kube-master02" "kube-master03"; do
 		if ! ping -c 1 $node &> /dev/null; then
-			echo "$node offline... starting" >> /var/log/start_prem.log
-			gcloud compute instances start $node >> /var/log/start_prem.log
+			date '+%Y/%m/%d %H:%M:%S' >> /var/log/start_preem.log
+			echo "$node offline... starting" >> /var/log/start_preem.log
+			gcloud compute instances start $node  --zone="us-central1-a" >> /var/log/start_preem.log
 		fi
 	done
 	sleep 60

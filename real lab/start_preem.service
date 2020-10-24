@@ -2,7 +2,7 @@
 Description=Start preemtibles vm
 
 [Service]
-ExecStart=/usr/bin/start_prem
+ExecStart=/usr/bin/start_preem
 Restart=on-failure
 
 [Install]

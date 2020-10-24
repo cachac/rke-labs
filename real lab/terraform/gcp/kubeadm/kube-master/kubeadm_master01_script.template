@@ -57,8 +57,7 @@ sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 # sudo firewall-cmd --permanent --add-port=10252/tcp
 # sudo firewall-cmd --permanent --add-port=179/tcp
 # sudo firewall-cmd --permanent --add-port=4789/udp
-# sudo firewall-cmd --reload
-
+# sudo firewall-cmd --reloaddate '+%Y/%m/%d %H:%M:%S' > /home/${username}/ilog
 #
 # ip tables
 #
@@ -98,14 +97,14 @@ sudo systemctl enable kubelet --now
 # sudo apt-mark hold kubelet kubeadm kubectl
 apt-get install bash-completion
 
-	echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
-	echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
-	echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
-	runuser -l ${username} -c  'complete -F __start_kubectl k'
-	runuser -l ${username} -c  'export KUBECONFIG=/etc/kubernetes/admin.conf'
-	echo 'export KUBECONFIG=/etc/kubernetes/admin.conf' >> /home/${username}/.bashrc
+echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
+echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
+echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
+runuser -l ${username} -c  'complete -F __start_kubectl k'
+runuser -l ${username} -c  'export KUBECONFIG=/etc/kubernetes/admin.conf'
+echo 'export KUBECONFIG=/etc/kubernetes/admin.conf' >> /home/${username}/.bashrc
 
-	echo 'kubeadm installed!' >> /home/${username}/ilog
+echo 'kubeadm installed!' >> /home/${username}/ilog
 else echo 'kubeadm already installed!' >> /home/${username}/ilog
 fi
 

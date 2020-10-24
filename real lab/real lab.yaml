@@ -34,18 +34,6 @@ curl <EXTERNAL-IP>
 # external loadBalancer (extra)
 # install nginx and config
 
-
-# Ingress crontroller
-# check option ingress + cert + helm:
-https://cert-manager.io/docs/tutorials/acme/ingress/
-  # using helm: https://github.com/kubernetes/ingress-nginx/tree/master/charts/ingress-nginx
-# la opción del link anterior muestra un external LB, probar.
-
-#
-# Rancher option (add-ons)
-https://rancher.com/docs/rke/latest/en/config-options/add-ons/ingress-controllers/
-https://blog.weareopensource.me/rancher-lets-encrypt-set-up-with-ingress-nginx-cert-manager/
-
 #
 # cert-manager install (kubectl)
 #
@@ -86,33 +74,52 @@ kubectl describe certificate ranchertest-tk
 kd  certificaterequest
 
 
-# ingress controller
+
+#
+# Ingress crontroller
+#
+#
+
+# Rancher option (add-ons)
+https://rancher.com/docs/rke/latest/en/config-options/add-ons/ingress-controllers/
+https://blog.weareopensource.me/rancher-lets-encrypt-set-up-with-ingress-nginx-cert-manager/
 # rke create a default ingress controller
 
 #
-# option: NGINX ingress controller option ( USER DAEMON SET ) without cert manager
-#
-# option 1: helm: https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-helm/
-git clone https://github.com/nginxinc/kubernetes-ingress/
-cd kubernetes-ingress/deployments/helm-chart
-git checkout v1.9.0
-helm repo add nginx-stable https://helm.nginx.com/stable
-helm repo update
-helm install my-release nginx-stable/nginx-ingress
-
-
-
-
-
-
-# option 2: manifest: https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/
+# option: NGINX ingress controller option ( USER DAEMON SET, to use without external LB, ACCESSING NODE PORT ) without cert manager
+# https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/
 
 # sa - rbac - secrets - cm - deploy
 kubectl apply -f common/ns-and-sa.yaml
 kubectl apply -f rbac/rbac.yaml
 kubectl apply -f common/default-server-secret.yaml
 kubectl apply -f common/nginx-config.yaml
+kubectl apply -f common/ingress-class.yaml
+
 kubectl apply -f daemon-set/nginx-ingress.yaml
+
+# check
+kubectl get pods --namespace=nginx-ingress
+
+# node port
+kubectl create -f service/nodeport.yaml
+
+
+# option 2: helm: https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-helm/
+  # using a load balancer by default
+    git clone https://github.com/nginxinc/kubernetes-ingress/
+    cd kubernetes-ingress/deployments/helm-chart
+    git checkout v1.9.0
+    helm repo add nginx-stable https://helm.nginx.com/stable
+    helm repo update
+    helm install my-ingress-controller nginx-stable/nginx-ingress
+
+### otra opción por probar: ingress-nginx NO SE SI ES LA OFICIAL
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+helm repo update
+helm install my-ingress-controller ingress-nginx/ingress-nginx
+###
 
 
 #

@@ -1,0 +1,9 @@
+[Unit]
+Description=Start preemtibles vm
+
+[Service]
+ExecStart=/usr/bin/start_prem
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

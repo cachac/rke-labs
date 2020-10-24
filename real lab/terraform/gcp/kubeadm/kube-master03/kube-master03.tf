@@ -12,7 +12,7 @@ resource "local_file" "ssh_private_key_pem" {
 # Networking
 resource "google_compute_address" "kube_internal_address03" {
   name         = "kube-internal-address03"
-  subnetwork   =  "kube-subnet"
+  subnetwork   = "kube-subnet"
   address_type = "INTERNAL"
   address      = "10.0.0.13"
   region       = var.gcp_region
@@ -83,6 +83,18 @@ resource "google_compute_instance" "kube_master03" {
   }
 
   # config file
+  provisioner "file" {
+    source      = "../../keys/key.json"
+    destination = "/home/${local.node_username}/key.json"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
   provisioner "file" {
     source      = "${path.module}/files/hosts"
     destination = "/home/${local.node_username}/hosts"

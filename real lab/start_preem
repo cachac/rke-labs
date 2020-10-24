@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# /usr/bin/start_prem
+# sudo chmod +x /usr/bin/start_prem
+
+# run as a deamon
+# /etc/systemd/system/start_prem.service
+# systemctl start start_prem.service
+# systemctl enable start_prem.service
+
+# gcloud config set account  birdscodeinfo@gmail.com
+# gcloud auth activate-service-account --key-file /home/${username}/key.json
+
+
+echo "Starting Daemon" >> /var/log/start_prem.log
+touch /var/log/start_prem.log
+
+while true; do
+	for node in "kube-master01" "kube-master02" "kube-master03"; do
+		if ! ping -c 1 $node &> /dev/null; then
+			echo "$node offline... starting" >> /var/log/start_prem.log
+			gcloud compute instances start $node >> /var/log/start_prem.log
+		fi
+	done
+	sleep 60
+done
+

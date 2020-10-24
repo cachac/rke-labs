@@ -3,6 +3,8 @@ date '+%Y/%m/%d %H:%M:%S' > /home/${username}/ilog
 SECONDS=0
 export DEBIAN_FRONTEND=noninteractive
 # root
+gcloud config set account  birdscodeinfo@gmail.com
+gcloud auth activate-service-account --key-file /home/${username}/key.json
 sudo usermod -aG sudo ${username}
 echo -e "password\npassword\n" | passwd ${username}
 # monitoring

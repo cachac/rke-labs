@@ -130,6 +130,18 @@ resource "google_compute_instance" "kube_master01" {
   }
 
   # config file
+	provisioner "file" {
+    source      = "../../keys/key.json"
+    destination = "/home/${local.node_username}/key.json"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
   provisioner "file" {
     source      = "${path.module}/files/hosts"
     destination = "/home/${local.node_username}/hosts"

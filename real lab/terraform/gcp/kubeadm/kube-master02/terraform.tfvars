@@ -4,7 +4,7 @@
 
 # Account JSON used to access GCP services
 # - Specify full path and name (e.g. ~/.gcp/account.json)
-gcp_account_json = "key.json"
+gcp_account_json = "../../keys/key.json"
 
 # Project to deploy resources into
 gcp_project = "kubernetes-292714"

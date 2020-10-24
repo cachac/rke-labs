@@ -18,7 +18,7 @@ if ! test -f /var/log/start_preem.log; then
 fi
 
 echo "Starting Daemon" >> /var/log/start_preem.log
-date "+%Y/%m/%d %H:%M:%S +%z" >> /var/log/start_preem.log
+date "+%Y/%m/%d %H:%M:%S %z" >> /var/log/start_preem.log
 echo "------------------------------" >> /var/log/start_preem.log
 
 while true; do

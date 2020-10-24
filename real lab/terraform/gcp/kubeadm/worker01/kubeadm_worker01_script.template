@@ -1,0 +1,109 @@
+#!/bin/bash -x
+export TZ="America/Costa_Rica"
+date +%z
+date '+%Y/%m/%d %H:%M:%S %z' > /home/${username}/ilog
+SECONDS=0
+export DEBIAN_FRONTEND=noninteractive
+# root
+sudo usermod -aG sudo ${username}
+echo -e "password\npassword\n" | passwd ${username}
+# monitoring
+# gcloud beta compute ssh kube-master01 --project=kubernetes-292714 --zone=us-central1-a --command="curl -sSO https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh && sudo bash add-monitoring-agent-repo.sh && sudo apt-get update && sudo apt-get install stackdriver-agent && sudo service stackdriver-agent start"
+#
+# Master: check ports
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+# disable swap
+sudo swapoff -a
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+#
+# ip tables
+#
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sudo sysctl --system
+
+sudo modprobe br_netfilter
+sudo sh -c "echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables"
+sudo sh -c "echo '1' > /proc/sys/net/ipv4/ip_forward"
+
+# docker
+if ! command -v docker &> /dev/null
+then
+	curl -fsSL https://get.docker.com -o get-docker.sh
+	sudo sh get-docker.sh
+
+	sudo usermod -aG docker ${username}
+	newgrp docker
+	echo 'Docker installed!' >> /home/${username}/ilog
+else echo 'Docker already installed!' >> /home/${username}/ilog
+fi
+
+# kubeadm
+if ! command -v kubeadm &> /dev/null
+then
+sudo apt-get update && sudo apt-get install -y apt-transport-https curl
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl #--disableexcludes=kubernetes
+sudo systemctl enable kubelet --now
+# sudo apt-mark hold kubelet kubeadm kubectl
+sudo apt-get install bash-completion
+
+	echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
+	echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
+	echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
+	runuser -l ${username} -c   'complete -F __start_kubectl k'
+	runuser -l ${username} -c  'export KUBECONFIG=/etc/kubernetes/admin.conf'
+	echo 'export KUBECONFIG=/etc/kubernetes/admin.conf' >> /home/${username}/.bashrc
+
+	echo 'kubeadm installed!' >> /home/${username}/ilog
+else echo 'kubeadm already installed!' >> /home/${username}/ilog
+fi
+
+#
+# SSH
+#
+sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
+systemctl reload sshd
+if ! command -v sshpass &> /dev/null
+then
+		sudo apt-get install sshpass
+		echo 'SSHpass installed!' >> /home/${username}/ilog
+else echo 'SSHpass already installed!' >> /home/${username}/ilog
+fi
+if ! test -f "/home/${username}/.ssh/id_rsa"
+then
+	runuser -l ${username} -c  "ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ''"
+	chmod 600 /home/${username}/.ssh/id_rsa*
+	chown ${username}:${username} /home/${username}/.ssh/id_rsa*
+	echo 'SSH keys created!' >> /home/${username}/ilog
+else echo 'SSH keys already created!' >> /home/${username}/ilog
+fi
+# find nodes and share ssh keys
+echo "Finding  nodes..." >> /home/${username}/ilog
+for node in "nginx-loadbalancer"
+do
+	echo "$node" >> /home/${username}/ilog
+	if ping -c 1 $node &> /dev/null
+	then
+		# conecta al nodo y agrega ssh
+		ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R $node >> /home/${username}/ilog
+		runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@$node" >> /home/${username}/ilog
+		ssh ${username}@$node "ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_private_ip}" >> /home/${username}/ilog
+		ssh ${username}@$node "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_private_ip}" >> /home/${username}/ilog
+		echo "$node ok" >> /home/${username}/ilog
+	else
+		echo "$node offline :(" >> /home/${username}/ilog
+	fi
+done
+
+# end
+duration=$SECONDS
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."  >> /home/${username}/ilog

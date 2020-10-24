@@ -12,21 +12,24 @@
 # gcloud auth activate-service-account --key-file /home/${username}/key.json
 export TZ="America/Costa_Rica"
 date +%z
-
+echo "----------------------------------" >> /var/log/start_preem.log
 if ! test -f /var/log/start_preem.log; then
 	touch /var/log/start_preem.log
 fi
 
 echo "Starting Daemon" >> /var/log/start_preem.log
 date "+%Y/%m/%d %H:%M:%S %z" >> /var/log/start_preem.log
-echo "------------------------------" >> /var/log/start_preem.log
+echo "----------------------------------" >> /var/log/start_preem.log
 
 while true; do
 	for node in "kube-master01" "kube-master02" "kube-master03"; do
 		if ! ping -c 1 $node &> /dev/null; then
+			echo "$node offline... starting:" >> /var/log/start_preem.log
 			date '+%Y/%m/%d %H:%M:%S' >> /var/log/start_preem.log
-			echo "$node offline... starting" >> /var/log/start_preem.log
 			gcloud compute instances start $node  --zone="us-central1-a" >> /var/log/start_preem.log
+			echo "$node online: " >> /var/log/start_preem.log
+			date "+%Y/%m/%d %H:%M:%S %z" >> /var/log/start_preem.log
+			echo "----------------------------------" >> /var/log/start_preem.log
 		fi
 	done
 	sleep 60

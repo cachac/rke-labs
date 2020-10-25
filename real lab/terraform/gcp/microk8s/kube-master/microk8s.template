@@ -17,7 +17,7 @@ echo -e "password\npassword\n" | passwd ${username}
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 
 # microk8s
-if ! command -v haproxy &> /dev/null; then
+if ! command -v microk8s &> /dev/null; then
 	sudo apt update
 	sudo iptables -P FORWARD ACCEPT
 	sudo apt install snapd
@@ -49,7 +49,11 @@ if ! command -v haproxy &> /dev/null; then
 	runuser -l ${username} -c "kubectl apply -f production_clusterIssuer.yaml"
 
 	# deploy
-done
+	runuser -l ${username} -c "kubectl apply deployment.yaml"
+	runuser -l ${username} -c "kubectl apply clusterIP.yaml"
+	runuser -l ${username} -c "kubectl apply ingress.yaml"
+
+fi
 
 # check
 microk8s.inspect >> /home/${username}/ilog

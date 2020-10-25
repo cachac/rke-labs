@@ -1,0 +1,50 @@
+#!/bin/bash -x
+
+
+# https://nanjoran.com/2020/04/20/Deploy-an-Nginx-ingress-controller-with-Certbot-on-a-microk8s/
+# Rancher: https://suda.pl/5-minute-home-server-with/
+export TZ="America/Costa_Rica"
+date +%z
+date '+%Y/%m/%d %H:%M:%S %z' > /home/${username}/ilog
+SECONDS=0
+export DEBIAN_FRONTEND=noninteractive
+# root
+gcloud config set account  birdscodeinfo@gmail.com
+gcloud auth activate-service-account --key-file /home/${username}/key.json
+sudo usermod -aG sudo ${username}
+echo -e "password\npassword\n" | passwd ${username}
+# monitoring
+# gcloud beta compute ssh kube-master01 --project=kubernetes-292714 --zone=us-central1-a --command="curl -sSO https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh && sudo bash add-monitoring-agent-repo.sh && sudo apt-get update && sudo apt-get install stackdriver-agent && sudo service stackdriver-agent start"
+#
+# Master: check ports
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+# snap
+sudo apt update
+sudo apt install snapd
+
+sudo snap install microk8s --classic --channel=1.18/stable
+sudo microk8s status --wait-ready
+sudo mkdir /home/${username}/.kube
+
+sudo microk8s kubectl config view --raw > /home/${username}/.kube/config
+sudo microk8s.enable ingress
+sudo snap install kubectl --classic
+
+# SERVERIP=10.0.0.11
+runuser -l ${username} -c  "kubectl apply -f https://k8s.io/examples/application/deployment.yaml"
+runuser -l ${username} -c  "kubectl expose deployment nginx-deployment --port 80"
+
+microk8s.inspect >> /home/${username}/ilog
+
+runuser -l ${username} -c  "kubectl create namespace cert-manager"
+runuser -l ${username} -c  "kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml"
+
+echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
+echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
+echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
+runuser -l ${username} -c  'complete -F __start_kubectl k'
+
+# end
+duration=$SECONDS
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."  >> /home/${username}/ilog

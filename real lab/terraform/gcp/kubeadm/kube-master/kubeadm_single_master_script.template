@@ -88,9 +88,6 @@ echo 'Kluster launched!!!' >> /home/${username}/ilog
 #
 # networking
 #
-sleep 20
-kubectl apply -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
-echo 'Calico launched!!!' >> /home/${username}/ilog
 
 # config
 runuser -l ${username} -c "mkdir -p /home/${username}/.kube"
@@ -100,13 +97,17 @@ runuser -l ${username} -c  "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
 runuser -l ${username} -c "export KUBECONFIG=/home/${username}/.kube/config"
 runuser -l ${username} -c "echo 'export KUBECONFIG=/home/${username}/.kube/config'"  >> /home/${username}/.bashrc
 
-# taint master node
-kubectl taint nodes  kube-master01 node-role.kubernetes.io/master-
 
-# helm
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-runuser -l ${username} -c "chmod 700 get_helm.sh"
-user -l ${username} -c "./get_helm.sh"
+# TODO: el comando kubectl debe buscar la config de kubernetes
+#kubectl apply -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
+#echo 'Calico launched!!!' >> /home/${username}/ilog
+# taint master node: TODO: el comando kubectl debe buscar la config de kubernetes
+# kubectl taint nodes  kube-master01 node-role.kubernetes.io/master-
+
+# helm debe descargar y bajar en $home
+# curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+# runuser -l ${username} -c "chmod 700 get_helm.sh"
+# user -l ${username} -c "./get_helm.sh"
 
 #
 # ingress controller
@@ -139,6 +140,8 @@ kubectl create -f service/nodeport.yaml
 #   --version v1.0.3 \
 #   --set installCRDs=true
 
+
+# git hub
 
 # end
 duration=$SECONDS

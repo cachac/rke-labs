@@ -36,7 +36,7 @@ spec:
               number: 80
 
 
-  tls: # < placing a host in the TLS config will indicate a certificate should be created
+  tls:
   - hosts:
       - ranchertest.tk
       - www.ranchertest.tk

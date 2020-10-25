@@ -3,6 +3,7 @@ kind: ClusterIssuer
 metadata:
   name: letsencrypt-staging
   namespace: cert-manager
+
 spec:
   acme:
     email: carlos.echc11@gmail.com
@@ -13,6 +14,5 @@ spec:
     - http01:
         ingress:
           class: nginx
-          # serviceType: ClusterIp
 
 

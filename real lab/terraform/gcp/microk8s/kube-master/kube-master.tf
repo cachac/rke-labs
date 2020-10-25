@@ -3,6 +3,9 @@
 # https://stackoverflow.com/questions/51246036/is-kubernetes-high-availability-using-kubeadm-possible-without-failover-load-bal
 # https://medium.com/@bambash/ha-kubernetes-cluster-via-kubeadm-b2133360b198
 
+# https://nanjoran.com/2020/04/20/Deploy-an-Nginx-ingress-controller-with-Certbot-on-a-microk8s/
+# Rancher: https://suda.pl/5-minute-home-server-with/
+
 # ssh keys
 resource "tls_private_key" "global_key" {
   algorithm = "RSA"
@@ -75,15 +78,10 @@ resource "google_compute_instance" "kube_master01" {
   metadata = {
     ssh-keys = "${local.node_username}:${tls_private_key.global_key.public_key_openssh}",
     user-data = templatefile(
-      # using providers (uncomment below module)
-      # join("/", [path.module, "userdata_rancher_server.template"]),
-      # using script
-      # join("/", [path.module, "kubeadm_master01_script.template"]),
-       join("/", [path.module, "microk8s.template"]),
+      join("/", [path.module, "microk8s.template"]),
       {
         docker_version = var.docker_version
         username       = local.node_username
-        # node_internal_ip = google_compute_address.kube_internal_address01.address
         node_public_ip = google_compute_address.kube_external_address01.address
       }
     )
@@ -91,7 +89,31 @@ resource "google_compute_instance" "kube_master01" {
 
   # k8's files
   provisioner "file" {
-    source      = "${path.module}/ingress.yaml"
+    source      = "../../../../app/deployment.yaml"
+    destination = "/home/${local.node_username}/deployment.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "../../../../app/clusterIP.yaml"
+    destination = "/home/${local.node_username}/clusterIP.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "../../../../app/ingress.yaml"
     destination = "/home/${local.node_username}/ingress.yaml"
 
     connection {
@@ -102,8 +124,8 @@ resource "google_compute_instance" "kube_master01" {
     }
   }
 
-	provisioner "file" {
-    source      = "${path.module}/production_clusterIssuer.yaml"
+  provisioner "file" {
+    source      = "../../../../app/production_clusterIssuer.yaml"
     destination = "/home/${local.node_username}/production_clusterIssuer.yaml"
 
     connection {
@@ -114,8 +136,8 @@ resource "google_compute_instance" "kube_master01" {
     }
   }
 
-	provisioner "file" {
-    source      = "${path.module}/staging_clusterIssuer.yaml"
+  provisioner "file" {
+    source      = "../../../../app/staging_clusterIssuer.yaml"
     destination = "/home/${local.node_username}/staging_clusterIssuer.yaml"
 
     connection {
@@ -126,9 +148,8 @@ resource "google_compute_instance" "kube_master01" {
     }
   }
 
-
   # config file
-	provisioner "file" {
+  provisioner "file" {
     source      = "../../keys/key.json"
     destination = "/home/${local.node_username}/key.json"
 
@@ -139,59 +160,10 @@ resource "google_compute_instance" "kube_master01" {
       private_key = tls_private_key.global_key.private_key_pem
     }
   }
-/*
-  provisioner "file" {
-    source      = "${path.module}/files/hosts"
-    destination = "/home/${local.node_username}/hosts"
-
-    connection {
-      type        = "ssh"
-      host        = self.network_interface.0.access_config.0.nat_ip
-      user        = local.node_username
-      private_key = tls_private_key.global_key.private_key_pem
-    }
-  }
-
-  provisioner "file" {
-    source      = "${path.module}/files/takeover.sh"
-    destination = "/home/${local.node_username}/takeover.sh"
-
-    connection {
-      type        = "ssh"
-      host        = self.network_interface.0.access_config.0.nat_ip
-      user        = local.node_username
-      private_key = tls_private_key.global_key.private_key_pem
-    }
-  }
-
-  provisioner "file" {
-    source      = "${path.module}/files/keepalived.conf"
-    destination = "/home/${local.node_username}/keepalived.conf"
-
-    connection {
-      type        = "ssh"
-      host        = self.network_interface.0.access_config.0.nat_ip
-      user        = local.node_username
-      private_key = tls_private_key.global_key.private_key_pem
-    }
-  }
-
-  provisioner "file" {
-    source      = "${path.module}/files/haproxy.cfg"
-    destination = "/home/${local.node_username}/haproxy.cfg"
-
-    connection {
-      type        = "ssh"
-      host        = self.network_interface.0.access_config.0.nat_ip
-      user        = local.node_username
-      private_key = tls_private_key.global_key.private_key_pem
-    }
-  }
-*/
 
   # kubectl alias
   provisioner "file" {
-    source      = "${path.module}/files/.kubectl_aliases"
+    source      = "../files/.kubectl_aliases"
     destination = "/home/${local.node_username}/.kubectl_aliases"
 
     connection {

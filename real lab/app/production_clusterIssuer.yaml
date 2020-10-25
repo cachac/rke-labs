@@ -2,7 +2,8 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
  name: letsencrypt-prod
-#  namespace: cert-manager
+ namespace: cert-manager
+
 spec:
  acme:
    # The ACME server URL
@@ -16,5 +17,5 @@ spec:
    solvers:
    - http01:
        ingress:
-         class:  nginx
+         class: nginx
 

@@ -78,8 +78,7 @@ resource "google_compute_instance" "kube_master02" {
       # using providers (uncomment below module)
       # join("/", [path.module, "userdata_rancher_server.template"]),
       # using script
-      # join("/", [path.module, "kubeadm_master02_script.template"]),
-       join("/", [path.module, "microk8s.template"]),
+      join("/", [path.module, "kubeadm_master02_script.template"]),
       {
         docker_version = var.docker_version
         username       = local.node_username
@@ -89,22 +88,8 @@ resource "google_compute_instance" "kube_master02" {
     )
   }
 
-  # ingress
-  provisioner "file" {
-    source      = "${path.module}/ingress-sample.yaml"
-    destination = "/home/${local.node_username}/ingress-sample.yaml"
-
-    connection {
-      type        = "ssh"
-      host        = self.network_interface.0.access_config.0.nat_ip
-      user        = local.node_username
-      private_key = tls_private_key.global_key.private_key_pem
-    }
-  }
-
-
   # config file
-	provisioner "file" {
+  provisioner "file" {
     source      = "../../keys/key.json"
     destination = "/home/${local.node_username}/key.json"
 
@@ -115,7 +100,7 @@ resource "google_compute_instance" "kube_master02" {
       private_key = tls_private_key.global_key.private_key_pem
     }
   }
-/*
+
   provisioner "file" {
     source      = "${path.module}/files/hosts"
     destination = "/home/${local.node_username}/hosts"
@@ -163,7 +148,6 @@ resource "google_compute_instance" "kube_master02" {
       private_key = tls_private_key.global_key.private_key_pem
     }
   }
-*/
 
   # kubectl alias
   provisioner "file" {

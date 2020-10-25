@@ -89,10 +89,34 @@ resource "google_compute_instance" "kube_master01" {
     )
   }
 
-  # ingress
+  # k8's files
   provisioner "file" {
-    source      = "${path.module}/ingress-sample.yaml"
-    destination = "/home/${local.node_username}/ingress-sample.yaml"
+    source      = "${path.module}/ingress.yaml"
+    destination = "/home/${local.node_username}/ingress.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+	provisioner "file" {
+    source      = "${path.module}/production_clusterIssuer.yaml"
+    destination = "/home/${local.node_username}/production_clusterIssuer.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+	provisioner "file" {
+    source      = "${path.module}/staging_clusterIssuer.yaml"
+    destination = "/home/${local.node_username}/staging_clusterIssuer.yaml"
 
     connection {
       type        = "ssh"

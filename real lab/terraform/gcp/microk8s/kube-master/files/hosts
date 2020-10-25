@@ -1,4 +1,0 @@
-10.0.0.11  kube-master01
-10.0.0.12  kube-master02
-10.0.0.13  kube-master03
-10.0.0.3   vip-k8s-master

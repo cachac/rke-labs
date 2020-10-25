@@ -83,33 +83,53 @@ fi
 # kubeadm init
 #
 sudo kubeadm init --upload-certs >> /home/${username}/kubeadm_init_log
+echo 'Kluster launched!!!' >> /home/${username}/ilog
  # HA options: --control-plane-endpoint "vip-k8s-master:8443" --upload-certs >> /home/${username}/kubeadm_init_log
 #
 # networking
 #
+sleep 20
 kubectl apply -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
+echo 'Calico launched!!!' >> /home/${username}/ilog
 
 # config
 runuser -l ${username} -c "mkdir -p /home/${username}/.kube"
 runuser -l ${username} -c "sudo cp -i /etc/kubernetes/admin.conf /home/${username}/.kube/config"
 # sudo chown ${username}:${username} /home/${username}/.kube/config
-runuser -l ${username} -c  #sudo chown $(id -u):$(id -g) $HOME/.kube/config#
+runuser -l ${username} -c  "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
 runuser -l ${username} -c "export KUBECONFIG=/home/${username}/.kube/config"
-runuser -l ${username} -c "echo 'export KUBECONFIG=/home/$USER/.kube/config'"  >> /home/${username}/.bashrc
+runuser -l ${username} -c "echo 'export KUBECONFIG=/home/${username}/.kube/config'"  >> /home/${username}/.bashrc
 
 # taint master node
-# kubectl taint nodes  kube-master01 node-role.kubernetes.io/master-
+kubectl taint nodes  kube-master01 node-role.kubernetes.io/master-
 
 # helm
-# curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-# runuser -l ${username} -c "chmod 700 get_helm.sh"
-# ./get_helm.sh
+ curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+ runuser -l ${username} -c "chmod 700 get_helm.sh"
+ user -l ${username} -c "./get_helm.sh"
 
 #
 # ingress controller
 #
+git clone https://github.com/nginxinc/kubernetes-ingress/
+cd kubernetes-ingress/deployments/helm-chart
+git checkout v1.9.0
+helm repo add nginx-stable https://helm.nginx.com/stable
+helm repo update
+helm install my-ingress-controller nginx-stable/nginx-ingress
 
+#
+# cert manager
+#
+kubectl create namespace cert-manager
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
 
+helm install \
+  cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --version v1.0.3 \
+  --set installCRDs=true
 
 
 # end

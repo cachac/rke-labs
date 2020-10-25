@@ -21,9 +21,9 @@ spec:
   #   - client auth
   # At least one of a DNS Name, URI, or IP address is required.
   dnsNames:
-  # - ranchertest.tk
-  # - www.ranchertest.tk
-  - lab.ranchertest.tk
+  - ranchertest.tk
+  - www.ranchertest.tk
+  # - lab.ranchertest.tk
   # uris:
   # - spiffe://cluster.local/ns/default/sa/example
   # ipAddresses:
@@ -32,7 +32,7 @@ spec:
   issuerRef:
     name: letsencrypt-staging
     # ClusterIssuer or Issuer
-    kind: ClusterIssuer
+    kind: Issuer
     # This is optional since cert-manager will default to this value however
     # if you are using an external issuer, change this to that issuer group.
     #group: cert-manager.io

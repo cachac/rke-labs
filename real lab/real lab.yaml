@@ -35,47 +35,6 @@ curl <EXTERNAL-IP>
 # install nginx and config
 
 #
-# cert-manager install (kubectl)
-#
-# cert manager docs
-https://cert-manager.io/docs/installation/kubernetes/
-https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-with-cert-manager-on-digitalocean-kubernetes-es
-
-# clean
-# with kubectl
-kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
-kubectl delete apiservice v1beta1.webhook.cert-manager.io
-kubectl delete namespace cert-manager
-# by security : issuer
-kubectl delete letsencrypt-staging
-kubectl delete letsencrypt-prod
-kubectl delete issuers.cert-manager.io letsencrypt-staging
-kubectl delete issuers.cert-manager.io letsencrypt-prod
-# install CRD's with kubectl
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.crds.yaml
-# check
-kubectl get all -n cert-manager
-# Add Let's Encrypt Issuer, download link, edit mail and save STAG
-kubectl create --namespace default --edit -f https://cert-manager.io/docs/tutorials/acme/example/staging-issuer.yaml
-# Add Let's Encrypt Issuer, download link, edit mail and save PROD
-kubectl create --namespace default --edit -f https://cert-manager.io/docs/tutorials/acme/example/production-issuer.yaml
-# tip: create issuer or clusterIssuer https://cert-manager.io/docs/configuration/acme/
-# check
-kubectl describe issuers.cert-manager.io letsencrypt-staging
-or
-kubectl describe clusterissuers.cert-manager.io letsencrypt-staging
-# cert logs
-kubectl logs -n cert-manager deploy/cert-manager -f
-# create CERT
-kubectl create -f staging_certificate.yml
-# check cert
-kubectl describe certificate ranchertest-tk
-# check csr
-kd  certificaterequest
-
-
-
-#
 # Ingress crontroller
 #
 #
@@ -115,11 +74,133 @@ kubectl create -f service/nodeport.yaml
     helm install my-ingress-controller nginx-stable/nginx-ingress
 
 ### otra opción por probar: ingress-nginx NO SE SI ES LA OFICIAL
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-helm repo update
-helm install my-ingress-controller ingress-nginx/ingress-nginx
+    helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+    helm repo update
+    helm install my-ingress-controller ingress-nginx/ingress-nginx
 ###
+
+
+
+#
+# cert-manager install (kubectl)
+#
+# cert manager docs
+https://cert-manager.io/docs/installation/kubernetes/
+https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-with-cert-manager-on-digitalocean-kubernetes-es
+
+# clean
+# with kubectl
+kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml
+kubectl delete apiservice v1beta1.webhook.cert-manager.io
+kubectl delete namespace cert-manager
+# by security : issuer
+kubectl delete letsencrypt-staging
+kubectl delete letsencrypt-prod
+kubectl delete issuers.cert-manager.io letsencrypt-staging
+kubectl delete issuers.cert-manager.io letsencrypt-prod
+
+
+#
+# option 1
+#
+# install - https://cert-manager.io/docs/installation/kubernetes/
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml
+
+# lets encrypt issuer
+# create definition and edit (stag and prod)
+kubectl create --edit -f https://cert-manager.io/docs/tutorials/acme/example/staging-issuer.yaml
+kubectl create --edit -f https://cert-manager.io/docs/tutorials/acme/example/production-issuer.yaml
+
+
+#
+# option 2 helm
+#
+kubectl create namespace cert-manager
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+
+helm install \
+  cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --version v1.0.3 \
+  --set installCRDs=true
+
+
+# check =
+# Message:               The ACME account was registered with the ACME server
+# Reason:                ACMEAccountRegistered
+# Status:                True
+kubectl describe issuer letsencrypt-staging
+# cert logs
+kubectl logs -n cert-manager deploy/cert-manager -f
+# challenge
+kubectl describe challenge | grep State
+# cert
+kubectl describe certificate
+# secret
+kubectl describe secret <secretName>
+
+
+# tls ingress staging
+metadata:
+  name: <ingressCustomName>
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/issuer: "letsencrypt-staging"
+spec:
+  tls:
+  - hosts:
+    - <example.example.com>
+    secretName: <quickstart-example-tls>
+
+# test certificates
+# update to producction
+# delete secrets, to renew certs
+kubectl delete secret <quickstart-example-tls>
+# check production certs
+kubectl describe certificate quickstart-example-tls
+kubectl describe order <quickstart-example-tls-889745041>
+kubectl describe challenge <quickstart-example-tls-889745041-0>
+
+
+# test option
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.12.0/cert-manager.yaml
+kubectl create namespace cert-manager
+##
+
+
+# install CRD's with kubectl
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.crds.yaml
+
+
+# check
+kubectl get all -n cert-manager
+# Add Let's Encrypt Issuer, download link, edit mail and save STAG
+kubectl create --namespace default --edit -f https://cert-manager.io/docs/tutorials/acme/example/staging-issuer.yaml
+# Add Let's Encrypt Issuer, download link, edit mail and save PROD
+kubectl create --namespace default --edit -f https://cert-manager.io/docs/tutorials/acme/example/production-issuer.yaml
+# tip: create issuer or clusterIssuer https://cert-manager.io/docs/configuration/acme/
+# check
+kubectl describe issuers.cert-manager.io letsencrypt-staging
+or
+kubectl describe clusterissuers.cert-manager.io letsencrypt-staging
+
+# create CERT
+kubectl create -f staging_certificate.yml
+# check cert
+kubectl describe certificate ranchertest-tk
+# check csr
+kd  certificaterequest
+
+
+
+
+
+
+
+
+
 
 
 #

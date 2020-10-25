@@ -116,10 +116,10 @@ resource "google_compute_instance" "kube_master01" {
   metadata = {
     ssh-keys = "${local.node_username}:${tls_private_key.global_key.public_key_openssh}",
     user-data = templatefile(
-      # using providers (uncomment below module)
-      # join("/", [path.module, "userdata_rancher_server.template"]),
-      # using script
-      join("/", [path.module, "kubeadm_master01_script.template"]),
+      # using script multi master HA
+      # join("/", [path.module, "kubeadm_master01_script.template"]),
+			# single master
+      join("/", [path.module, "kubeadm_single_master_script.template"]),
       {
         docker_version = var.docker_version
         username       = local.node_username

@@ -1,0 +1,148 @@
+#!/bin/bash -x
+export TZ="America/Costa_Rica"
+date +%z
+date '+%Y/%m/%d %H:%M:%S %z' > /home/${username}/ilog
+SECONDS=0
+export DEBIAN_FRONTEND=noninteractive
+# root
+runuser -l ${username} -c  "gcloud config set account  birdscodeinfo@gmail.com"
+runuser -l ${username} -c  "gcloud auth activate-service-account --key-file /home/${username}/key.json"
+
+sudo usermod -aG sudo ${username}
+echo -e "password\npassword\n" | passwd ${username}
+
+# monitoring
+# gcloud beta compute ssh kube-master01 --project=kubernetes-292714 --zone=us-central1-a --command="curl -sSO https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh && sudo bash add-monitoring-agent-repo.sh && sudo apt-get update && sudo apt-get install stackdriver-agent && sudo service stackdriver-agent start"
+
+# disable swap
+sudo swapoff -a
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+# SELinux
+# sudo setenforce 0
+# sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+#
+# Master: check ports
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+# sudo firewall-cmd --permanent --add-port=6443/tcp
+# sudo firewall-cmd --permanent --add-port=2379-2380/tcp
+# sudo firewall-cmd --permanent --add-port=10250/tcp
+# sudo firewall-cmd --permanent --add-port=10251/tcp
+# sudo firewall-cmd --permanent --add-port=10252/tcp
+# sudo firewall-cmd --permanent --add-port=179/tcp
+# sudo firewall-cmd --permanent --add-port=4789/udp
+# sudo firewall-cmd --reloaddate '+%Y/%m/%d %H:%M:%S' > /home/${username}/ilog
+#
+# ip tables
+#
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sudo sysctl --system
+
+sudo modprobe br_netfilter
+sudo sh -c "echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables"
+sudo sh -c "echo '1' > /proc/sys/net/ipv4/ip_forward"
+
+# docker
+if ! command -v docker &> /dev/null
+then
+	curl -fsSL https://get.docker.com -o get-docker.sh
+	sudo sh get-docker.sh
+
+	sudo usermod -aG docker ${username}
+	newgrp docker
+	echo 'Docker installed!' >> /home/${username}/ilog
+else echo 'Docker already installed!' >> /home/${username}/ilog
+fi
+
+# kubeadm
+if ! command -v kubeadm &> /dev/null
+then
+sudo apt-get update && sudo apt-get install -y apt-transport-https curl
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl #--disableexcludes=kubernetes
+sudo systemctl enable kubelet --now
+# sudo apt-mark hold kubelet kubeadm kubectl
+apt-get install bash-completion
+
+echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
+echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
+echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
+runuser -l ${username} -c  'complete -F __start_kubectl k'
+
+echo 'kubeadm installed!' >> /home/${username}/ilog
+else echo 'kubeadm already installed!' >> /home/${username}/ilog
+fi
+
+#
+# kubeadm init
+#
+sudo kubeadm init --upload-certs >> /home/${username}/kubeadm_init_log
+echo 'Kluster launched!!!' >> /home/${username}/ilog
+ # HA options: --control-plane-endpoint "vip-k8s-master:8443" --upload-certs >> /home/${username}/kubeadm_init_log
+#
+# networking
+#
+sleep 20
+kubectl apply -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
+echo 'Calico launched!!!' >> /home/${username}/ilog
+
+# config
+runuser -l ${username} -c "mkdir -p /home/${username}/.kube"
+runuser -l ${username} -c "sudo cp -i /etc/kubernetes/admin.conf /home/${username}/.kube/config"
+# sudo chown ${username}:${username} /home/${username}/.kube/config
+runuser -l ${username} -c  "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+runuser -l ${username} -c "export KUBECONFIG=/home/${username}/.kube/config"
+runuser -l ${username} -c "echo 'export KUBECONFIG=/home/${username}/.kube/config'"  >> /home/${username}/.bashrc
+
+# taint master node
+kubectl taint nodes  kube-master01 node-role.kubernetes.io/master-
+
+# helm
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+runuser -l ${username} -c "chmod 700 get_helm.sh"
+user -l ${username} -c "./get_helm.sh"
+
+#
+# ingress controller
+#
+git clone https://github.com/nginxinc/kubernetes-ingress/
+cd kubernetes-ingress/deployments
+git checkout v1.9.0
+# sa - rbac - secrets - cm - deploy
+kubectl apply -f common/ns-and-sa.yaml
+kubectl apply -f rbac/rbac.yaml
+kubectl apply -f common/default-server-secret.yaml
+kubectl apply -f common/nginx-config.yaml
+kubectl apply -f common/ingress-class.yaml
+kubectl apply -f daemon-set/nginx-ingress.yaml
+
+# node port
+kubectl create -f service/nodeport.yaml
+
+
+#
+# cert manager
+#
+# kubectl create namespace cert-manager
+# helm repo add jetstack https://charts.jetstack.io
+# helm repo update
+
+# helm install \
+#   cert-manager jetstack/cert-manager \
+#   --namespace cert-manager \
+#   --version v1.0.3 \
+#   --set installCRDs=true
+
+
+# end
+duration=$SECONDS
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."  >> /home/${username}/ilog
+
+
+

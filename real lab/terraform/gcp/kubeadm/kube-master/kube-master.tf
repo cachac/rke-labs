@@ -9,7 +9,7 @@
 # https://www.linuxtechi.com/setup-highly-available-kubernetes-cluster-kubeadm/
 
 # gcp keepalive: https://geko.cloud/how-to-set-up-a-high-availability-haproxy-in-google-cloud-keepalived/
-
+# GCP cert-manager
 # ssh keys
 resource "tls_private_key" "global_key" {
   algorithm = "RSA"
@@ -120,6 +120,8 @@ resource "google_compute_instance" "kube_master01" {
       # join("/", [path.module, "kubeadm_master01_script.template"]),
 			# single master
       join("/", [path.module, "kubeadm_single_master_script.template"]),
+			# microk8s
+      # join("/", [path.module, "kubeadm_single_master_script.template"]),
       {
         docker_version = var.docker_version
         username       = local.node_username

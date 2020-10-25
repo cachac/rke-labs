@@ -1,6 +1,5 @@
 #!/bin/bash -x
 
-
 # https://nanjoran.com/2020/04/20/Deploy-an-Nginx-ingress-controller-with-Certbot-on-a-microk8s/
 # Rancher: https://suda.pl/5-minute-home-server-with/
 export TZ="America/Costa_Rica"
@@ -19,23 +18,26 @@ echo -e "password\npassword\n" | passwd ${username}
 # Master: check ports
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 
+# sed -i '1s/^/nameserver 8.8.8.8 /' /etc/resolv.conf
+
 # snap
 sudo apt update
 sudo apt install snapd
 
-sudo snap install microk8s --classic --channel=1.18/stable
+sudo snap install microk8s --classic --channel=1.19/stable
 sudo microk8s status --wait-ready
-sudo mkdir /home/${username}/.kube
 
+sudo mkdir /home/${username}/.kube
 sudo microk8s kubectl config view --raw > /home/${username}/.kube/config
-sudo microk8s.enable ingress
 sudo snap install kubectl --classic
+sudo microk8s.enable ingress
+sudo microk8s enable dns
+
 
 # SERVERIP=10.0.0.11
 runuser -l ${username} -c  "kubectl apply -f https://k8s.io/examples/application/deployment.yaml"
 runuser -l ${username} -c  "kubectl expose deployment nginx-deployment --port 80"
 
-microk8s.inspect >> /home/${username}/ilog
 
 runuser -l ${username} -c  "kubectl create namespace cert-manager"
 runuser -l ${username} -c  "kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml"
@@ -44,6 +46,35 @@ echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(
 echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
 echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
 runuser -l ${username} -c  'complete -F __start_kubectl k'
+
+microk8s.inspect >> /home/${username}/ilog
+
+# gcloud dns
+# https://cert-manager.io/docs/configuration/acme/dns01/google/
+# gcloud config set account  birdscodeinfo@gmail.com
+# gcloud auth activate-service-account --key-file /home/${username}/key.json
+
+# export PROJECT_ID=kubernetes-292714
+# gcloud iam service-accounts create dns01-solver --display-name "dns01-solver"
+
+# gcloud projects add-iam-policy-binding $PROJECT_ID \
+#    --member serviceAccount:dns01-solver@$PROJECT_ID.iam.gserviceaccount.com \
+#    --role roles/dns.admin
+
+# gcloud iam service-accounts create dns01-solver
+
+# gcloud iam service-accounts keys create key.json \
+#    --iam-account dns01-solver@$PROJECT_ID.iam.gserviceaccount.com
+
+# kubectl create secret generic clouddns-dns01-solver-svc-acct \
+#    --from-file=key.json
+
+
+# cert manager
+sudo iptables -P FORWARD ACCEPT
+runuser -l ${username} -c "kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml"
+
+
 
 # end
 duration=$SECONDS

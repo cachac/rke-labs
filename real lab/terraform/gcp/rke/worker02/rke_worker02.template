@@ -1,0 +1,86 @@
+#!/bin/bash -x
+date '+%Y/%m/%d %H:%M:%S' > /home/${username}/ilog
+SECONDS=0
+export DEBIAN_FRONTEND=noninteractive
+# root
+sudo usermod -aG sudo ${username}
+echo -e "password\npassword\n" | passwd ${username}
+# docker
+if ! command -v docker &> /dev/null
+then
+    curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
+		sudo usermod -aG docker ${username}
+		newgrp docker
+		echo 'Docker installed!' >> /home/${username}/ilog
+else echo 'Docker already installed!' >> /home/${username}/ilog
+fi
+# copy ssh between nodes
+sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+sed -i 's/#AllowTcpForwarding yes/AllowTcpForwarding yes/g' /etc/ssh/sshd_config
+systemctl reload sshd
+# copy ssh key's
+if ! command -v sshpass &> /dev/null
+then
+		sudo apt-get install sshpass
+		echo 'SSHpass installed!' >> /home/${username}/ilog
+else echo 'SSHpass already installed!' >> /home/${username}/ilog
+fi
+
+if ! test -f "/home/cachac6/.ssh/id_rsa"
+then
+	runuser -l ${username} -c  "ssh-keygen -b 2048 -t rsa -f /home/${username}/.ssh/id_rsa -q -N ''"
+	chmod 600 /home/${username}/.ssh/id_rsa*
+	chown ${username}:${username} /home/${username}/.ssh/id_rsa*
+	echo 'SSH keys created!' >> /home/${username}/ilog
+else echo 'SSH keys already created!' >> /home/${username}/ilog
+fi
+
+ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip} >> /home/${username}/ilog
+runuser -l ${username} -c "sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip}" >> /home/${username}/ilog
+
+# find nodes
+echo "Finding  nodes..." >> /home/${username}/ilog
+for node in "rke-master01" "rke-master02" "rke-worker02"
+do
+	echo "$node" >> /home/${username}/ilog
+	#if rke-master01 is offline, wait...
+	case $node in
+		"rke-master01")
+			i="0"
+			while [ $i -lt 10 ]
+			do
+				if ! ping -c 1 $node &> /dev/null
+				then
+					echo "waiting rke-master01 [$i]..." >> /home/${username}/ilog
+					sleep 60
+				else
+					echo 'rke-master ok' >> /home/${username}/ilog
+					break
+				fi
+				i=$[$i+1]
+			done
+		;;
+	esac
+	# share keys
+	if ping -c 1 $node &> /dev/null
+	then
+		ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R $node >> /home/${username}/ilog
+		runuser -l ${username} -c "
+			sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@$node
+			ssh ${username}@$node "
+				sudo ssh-keygen -f "/home/${username}/.ssh/known_hosts" -R ${node_public_ip}
+				sshpass -p 'password' ssh-copy-id -i /home/${username}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ${username}@${node_public_ip} "" >> /home/${username}/ilog
+		echo "$node ok" >> /home/${username}/ilog
+	else
+		echo "$node offline :(" >> /home/${username}/ilog
+	fi
+done
+# end
+duration=$SECONDS
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+
+
+
+
+
+

@@ -135,6 +135,8 @@ helm install \
 # Reason:                ACMEAccountRegistered
 # Status:                True
 kubectl describe issuer letsencrypt-staging
+kubectl describe clusterIssuer letsencrypt-staging
+
 # cert logs
 kubectl logs -n cert-manager deploy/cert-manager -f
 # challenge

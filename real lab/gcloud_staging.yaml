@@ -1,27 +1,3 @@
-# Please edit the object below. Lines beginning with a '#' will be ignored,
-# and an empty file will abort the edit. If an error occurs while saving this file will be
-# reopened with the relevant failures.
-#
-# https://cert-manager.io/docs/configuration/acme/dns01/google/
-# gcloud config set account  birdscodeinfo@gmail.com
-# gcloud auth activate-service-account --key-file /home/${username}/key.json
-
-# PROJECT_ID=kubernetes-292714
-# gcloud iam service-accounts create dns01-solver --display-name "dns01-solver"
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-   --member serviceAccount:dns01-solver@$PROJECT_ID.iam.gserviceaccount.com \
-   --role roles/dns.admin
-
-# gcloud iam service-accounts create dns01-solver
-
-gcloud iam service-accounts keys create key.json \
-   --iam-account dns01-solver@$PROJECT_ID.iam.gserviceaccount.com
-
-kubectl create secret generic clouddns-dns01-solver-svc-acct \
-   --from-file=key.json
-
-
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:

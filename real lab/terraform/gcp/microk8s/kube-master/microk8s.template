@@ -28,10 +28,12 @@ if ! command -v microk8s &> /dev/null; then
 	sudo mkdir /home/${username}/.kube
 	sudo microk8s kubectl config view --raw > /home/${username}/.kube/config
 	sudo snap install kubectl --classic
-	sudo microk8s.enable ingress
-	sudo microk8s enable dns
+	sudo microk8s.enable dns dashboard storage ingress helm
 
 	# config
+	sudo sh -c 'echo "--allow-privileged=true" >> /var/snap/microk8s/current/args/kube-apiserver'
+  sudo systemctl restart snap.microk8s.daemon-apiserver.service
+
 	runuser -l ${username} -c  "kubectl apply -f https://k8s.io/examples/application/deployment.yaml"
 	runuser -l ${username} -c  "kubectl expose deployment nginx-deployment --port 80"
 
@@ -43,11 +45,24 @@ if ! command -v microk8s &> /dev/null; then
 	echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
 	runuser -l ${username} -c  'complete -F __start_kubectl k'
 
+	# Setup and install Tiller (part of Helm)
+	sudo microk8s.kubectl create serviceaccount tiller --namespace kube-system
+	sudo microk8s.kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+	sudo microk8s.helm init --service-account=tiller
+
+
 	# cert manager
 	runuser -l ${username} -c "kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml"
 	sleep 30
 	runuser -l ${username} -c "kubectl apply -f staging_clusterIssuer.yaml"
 	runuser -l ${username} -c "kubectl apply -f production_clusterIssuer.yaml"
+
+	# Install cert-manager user by Rancher
+	sudo microk8s.kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
+
+	# Install stable Rancher
+ 	sudo microk8s.helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
+	sudo microk8s.helm install rancher-stable/rancher --name rancher --namespace cattle-system  --set replicas=1 --set hostname=${HOSTNAME}.home
 
 	# deploy
 	runuser -l ${username} -c "kubectl apply -f deployment.yaml"

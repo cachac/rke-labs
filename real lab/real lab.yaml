@@ -136,16 +136,14 @@ helm install \
 # Status:                True
 kubectl describe issuer letsencrypt-staging
 kubectl describe clusterIssuer letsencrypt-staging
-
-# cert logs
-kubectl logs -n cert-manager deploy/cert-manager -f
 # challenge
 kubectl describe challenge | grep State
 # cert
 kubectl describe certificate
 # secret
 kubectl describe secret <secretName>
-
+#  trouble: cert logs
+kubectl logs -n cert-manager deploy/cert-manager -f
 
 # tls ingress staging
 metadata:

@@ -1,0 +1,28 @@
+#!/bin/bash -x
+
+export TZ="America/Costa_Rica"
+date +%z
+date '+%Y/%m/%d %H:%M:%S %z' > /home/${username}/ilog
+SECONDS=0
+export DEBIAN_FRONTEND=noninteractive
+# root
+gcloud config set account  birdscodeinfo@gmail.com
+gcloud auth activate-service-account --key-file /home/${username}/key.json
+sudo usermod -aG sudo ${username}
+echo -e "password\npassword\n" | passwd ${username}
+# microk8s
+if ! command -v microk8s &> /dev/null; then
+	sudo apt update
+	sudo iptables -P FORWARD ACCEPT
+	sudo apt install snapd
+
+	sudo snap install microk8s --classic --channel=1.19/stable
+	sudo microk8s status --wait-ready
+	microk8s join ${microNode}
+
+fi
+# check
+microk8s.inspect >> /home/${username}/ilog
+# end
+duration=$SECONDS
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."  >> /home/${username}/ilog

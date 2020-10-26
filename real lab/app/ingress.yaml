@@ -7,13 +7,13 @@ metadata:
     # add an annotation indicating the issuer to use.
     # cert-manager.io/issuer: "letsencrypt-staging"
 
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # cert-manager.io/cluster-issuer: "letsencrypt-staging"
     nginx.ingress.kubernetes.io/rewrite-target: /
 
   name: kube-verify-ingress
   # namespace: kube-verify
-  
+
 spec:
   # ingressClassName: nginx
   rules:

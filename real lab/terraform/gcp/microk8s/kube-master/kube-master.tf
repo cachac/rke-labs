@@ -30,7 +30,6 @@ resource "google_compute_address" "kube_external_address01" {
   region = var.gcp_region
 }
 
-
 # disk: admin by google
 resource "google_compute_disk" "kube_master_disk01" {
   name  = "master-disk01"

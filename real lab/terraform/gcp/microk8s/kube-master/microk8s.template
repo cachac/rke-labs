@@ -45,13 +45,14 @@ if ! command -v microk8s &> /dev/null; then
 
 	# cert manager
 	runuser -l ${username} -c "kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml"
+	sleep 30
 	runuser -l ${username} -c "kubectl apply -f staging_clusterIssuer.yaml"
 	runuser -l ${username} -c "kubectl apply -f production_clusterIssuer.yaml"
 
 	# deploy
-	runuser -l ${username} -c "kubectl apply deployment.yaml"
-	runuser -l ${username} -c "kubectl apply clusterIP.yaml"
-	runuser -l ${username} -c "kubectl apply ingress.yaml"
+	runuser -l ${username} -c "kubectl apply -f deployment.yaml"
+	runuser -l ${username} -c "kubectl apply -f clusterIP.yaml"
+	runuser -l ${username} -c "kubectl apply -f ingress.yaml"
 
 fi
 
@@ -66,9 +67,9 @@ microk8s.inspect >> /home/${username}/ilog
 # export PROJECT_ID=kubernetes-292714
 # gcloud iam service-accounts create dns01-solver --display-name "dns01-solver"
 
-# gcloud projects add-iam-policy-binding $PROJECT_ID \
-#    --member serviceAccount:dns01-solver@$PROJECT_ID.iam.gserviceaccount.com \
-#    --role roles/dns.admin
+# # gcloud projects add-iam-policy-binding $PROJECT_ID \
+#     --member serviceAccount:dns01-solver@$PROJECT_ID.iam.gserviceaccount.com \
+#     --role roles/dns.admin
 
 # gcloud iam service-accounts create dns01-solver
 

@@ -62,7 +62,7 @@ if ! command -v microk8s &> /dev/null; then
 
 	# Install stable Rancher
  	sudo microk8s.helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
-	sudo microk8s.helm install rancher-stable/rancher --name rancher --namespace cattle-system  --set replicas=1 --set hostname=${HOSTNAME}.home
+	sudo microk8s.helm install rancher-stable/rancher --name rancher --namespace cattle-system  --set replicas=1 --set hostname=kube-master01.home
 
 	# deploy
 	runuser -l ${username} -c "kubectl apply -f deployment.yaml"

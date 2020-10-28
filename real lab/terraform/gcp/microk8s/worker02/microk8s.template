@@ -18,7 +18,7 @@ if ! command -v microk8s &> /dev/null; then
 
 	sudo snap install microk8s --classic --channel=1.19/stable
 	sudo microk8s status --wait-ready
-	microk8s join ${microNode}
+	# microk8s join ${microNode}
 
 fi
 # check

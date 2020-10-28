@@ -14,7 +14,7 @@ resource "google_compute_address" "kube_internal_worker_address02" {
   name         = "kube-internal-worker-address02"
   subnetwork   = "kube-subnet"
   address_type = "INTERNAL"
-  address      = "10.0.0.103"
+  address      = "10.0.0.102"
   region       = var.gcp_region
 }
 resource "google_compute_address" "kube_external_worker_address02" {

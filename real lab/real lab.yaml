@@ -76,7 +76,7 @@ kubectl create -f service/nodeport.yaml
     helm repo update
     helm install my-ingress-controller nginx-stable/nginx-ingress
 
-### otra opción por probar: ingress-nginx NO SE SI ES LA OFICIAL
+### otra opción por probar: ingress-nginx NO OFICIAL nginx. Hecho por la comunidad K8s
     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
     helm repo add stable https://kubernetes-charts.storage.googleapis.com/
     helm repo update

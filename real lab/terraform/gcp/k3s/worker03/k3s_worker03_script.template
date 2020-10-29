@@ -1,0 +1,57 @@
+#!/bin/bash -x
+export TZ="America/Costa_Rica"
+date +%z
+date '+%Y/%m/%d %H:%M:%S %z' > /home/${username}/ilog
+SECONDS=0
+export DEBIAN_FRONTEND=noninteractive
+# root
+# gcloud config set account  birdscodeinfo@gmail.com
+# gcloud auth activate-service-account --key-file /home/${username}/key.json
+sudo usermod -aG sudo ${username}
+echo -e "password\npassword\n" | passwd ${username}
+# docker
+# if ! command -v docker &> /dev/null
+# then
+#     curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
+# 		sudo usermod -aG docker ${username}
+# 		newgrp docker
+# 		echo 'Docker installed!' >> /home/${username}/ilog
+# else echo 'Docker already installed!' >> /home/${username}/ilog
+# fi
+# kubectl
+# if ! command -v kubectl &> /dev/null
+# then
+#     sudo apt-get update && sudo apt-get install -y apt-transport-https
+# 		curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+# 		echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+# 		sudo apt-get update
+# 		sudo apt-get install -y kubectl
+# 		#
+# 		echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
+# 		echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
+# 		echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
+# 		runuser -l ${username} -c  'complete -F __start_kubectl k'
+
+# 		echo 'Kubectl installed!' >> /home/${username}/ilog
+# else echo 'Kubectl already installed!' >> /home/${username}/ilog
+# fi
+# k3s
+# if ! command -v k3s &> /dev/null
+# then
+#     curl -sfL https://get.k3s.io | sh -
+# 		echo 'K3S installed!' >> /home/${username}/ilog
+# 		# config
+# 		# config bashrc
+# 		mkdir .kube
+# 		cp /etc/rancher/k3s/k3s.yaml .kube/
+# 		chown ${username}:${username} ./kube
+# 		echo 'export KUBECONFIG=$(pwd)/.kube/k3s.yaml' >> /home/${username}/.bashrc
+# else echo 'K3S already installed!' >> /home/${username}/ilog
+# fi
+
+# end
+duration=$SECONDS
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+
+
+

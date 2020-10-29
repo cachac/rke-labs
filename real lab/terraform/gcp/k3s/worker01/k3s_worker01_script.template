@@ -19,35 +19,66 @@ echo -e "password\npassword\n" | passwd ${username}
 # else echo 'Docker already installed!' >> /home/${username}/ilog
 # fi
 # kubectl
-# if ! command -v kubectl &> /dev/null
-# then
-#     sudo apt-get update && sudo apt-get install -y apt-transport-https
-# 		curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-# 		echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-# 		sudo apt-get update
-# 		sudo apt-get install -y kubectl
-# 		#
-# 		echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
-# 		echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
-# 		echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
-# 		runuser -l ${username} -c  'complete -F __start_kubectl k'
+if ! command -v kubectl &> /dev/null
+then
+    sudo apt-get update && sudo apt-get install -y apt-transport-https
+		curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+		echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+		sudo apt-get update
+		sudo apt-get install -y kubectl
+		#
+		echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
+		echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
+		echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
+		runuser -l ${username} -c  'complete -F __start_kubectl k'
 
-# 		echo 'Kubectl installed!' >> /home/${username}/ilog
-# else echo 'Kubectl already installed!' >> /home/${username}/ilog
-# fi
+		echo 'Kubectl installed!' >> /home/${username}/ilog
+else echo 'Kubectl already installed!' >> /home/${username}/ilog
+fi
 # k3s
-# if ! command -v k3s &> /dev/null
-# then
-#     curl -sfL https://get.k3s.io | sh -
-# 		echo 'K3S installed!' >> /home/${username}/ilog
-# 		# config
-# 		# config bashrc
-# 		mkdir .kube
-# 		cp /etc/rancher/k3s/k3s.yaml .kube/
-# 		chown ${username}:${username} ./kube
-# 		echo 'export KUBECONFIG=$(pwd)/.kube/k3s.yaml' >> /home/${username}/.bashrc
-# else echo 'K3S already installed!' >> /home/${username}/ilog
-# fi
+if ! command -v k3s &> /dev/null
+then
+    curl -sfL https://get.k3s.io | sh -
+		echo 'K3S installed!' >> /home/${username}/ilog
+		# config
+		# config bashrc
+		mkdir .kube
+		cp /etc/rancher/k3s/k3s.yaml .kube/
+		chown ${username}:${username} ./kube
+		echo 'export KUBECONFIG=$(pwd)/.kube/k3s.yaml' >> /home/${username}/.bashrc
+else echo 'K3S already installed!' >> /home/${username}/ilog
+fi
+
+#
+# ingress controller
+#
+apt install git
+git clone https://github.com/nginxinc/kubernetes-ingress/
+cd kubernetes-ingress/deployments
+git checkout v1.9.0
+# sa - rbac - secrets - cm - deploy
+runuser -l ${username} -c "sudo kubectl apply -f common/ns-and-sa.yaml"
+runuser -l ${username} -c "sudo kubectl apply -f rbac/rbac.yaml"
+runuser -l ${username} -c "sudo kubectl apply -f common/default-server-secret.yaml"
+runuser -l ${username} -c "sudo kubectl apply -f common/nginx-config.yaml"
+runuser -l ${username} -c "sudo kubectl apply -f common/ingress-class.yaml"
+runuser -l ${username} -c "sudo kubectl apply -f daemon-set/nginx-ingress.yaml"
+# node port
+runuser -l ${username} -c "sudo kubectl create -f service/nodeport.yaml"
+
+
+# cert manager
+runuser -l ${username} -c "kubectl create namespace cert-manager"
+runuser -l ${username} -c "kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml"
+sleep 30
+runuser -l ${username} -c "kubectl apply -f staging_clusterIssuer.yaml"
+runuser -l ${username} -c "kubectl apply -f production_clusterIssuer.yaml"
+
+# deploy
+runuser -l ${username} -c "kubectl apply -f deployment.yaml"
+runuser -l ${username} -c "kubectl apply -f clusterIP.yaml"
+runuser -l ${username} -c "kubectl apply -f ingress.yaml"
+
 
 # end
 duration=$SECONDS

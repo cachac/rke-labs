@@ -10,14 +10,14 @@ export DEBIAN_FRONTEND=noninteractive
 sudo usermod -aG sudo ${username}
 echo -e "password\npassword\n" | passwd ${username}
 # docker
-if ! command -v docker &> /dev/null
-then
-    curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
-		sudo usermod -aG docker ${username}
-		newgrp docker
-		echo 'Docker installed!' >> /home/${username}/ilog
-else echo 'Docker already installed!' >> /home/${username}/ilog
-fi
+# if ! command -v docker &> /dev/null
+# then
+#     curl -sL https://releases.rancher.com/install-docker/${docker_version}.sh | sh
+# 		sudo usermod -aG docker ${username}
+# 		newgrp docker
+# 		echo 'Docker installed!' >> /home/${username}/ilog
+# else echo 'Docker already installed!' >> /home/${username}/ilog
+# fi
 # kubectl
 if ! command -v kubectl &> /dev/null
 then

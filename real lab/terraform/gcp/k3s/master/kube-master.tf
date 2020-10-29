@@ -1,5 +1,5 @@
 # https://www.terraform.io/docs/providers/google/guides/getting_started.html
-# check: RKE PROVISIONER https://registry.terraform.io/providers/rancher/rke/latest/docs/resources/cluster
+# check: k3s PROVISIONER https://registry.terraform.io/providers/rancher/k3s/latest/docs/resources/cluster
 
 # credentials:
 # install gcloud...
@@ -18,10 +18,10 @@
 # terraform init
 # terraform plan
 # terraform apply -auto-approve
-# terraform destroy -target google_compute_instance.rke_master01 -auto-approve
+# terraform destroy -target google_compute_instance.k3s_master01 -auto-approve
 
 # check: provisionin Rancher cluster: https://medium.com/@chfrank_cgn/building-a-rancher-cluster-on-google-cloud-with-terraform-31f1453fbb31
-# rke GCP: https://rancher.com/docs/rancher/v2.x/en/quick-start-guide/deployment/google-gcp-qs/
+# k3s GCP: https://rancher.com/docs/rancher/v2.x/en/quick-start-guide/deployment/google-gcp-qs/
 # GCP terraform resourses: https://www.terraform.io/docs/providers/google/r/compute_address.html
 
 # ssh keys
@@ -36,35 +36,35 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission   = "0600"
 }
 # Networking
-resource "google_compute_network" "rke_network" {
-  name = "rke-network"
+resource "google_compute_network" "k3s_network" {
+  name = "k3s-network"
 }
 
-resource "google_compute_subnetwork" "rke_subnet" {
-  name          = "rke-subnet"
+resource "google_compute_subnetwork" "k3s_subnet" {
+  name          = "k3s-subnet"
   ip_cidr_range = "10.0.0.0/16"
   region        = var.gcp_region
-  network       = google_compute_network.rke_network.id
+  network       = google_compute_network.k3s_network.id
 }
 
-resource "google_compute_address" "rke_internal_address01" {
-  name         = "rke-internal-address01"
-  subnetwork   = google_compute_subnetwork.rke_subnet.id
+resource "google_compute_address" "k3s_internal_address01" {
+  name         = "k3s-internal-address01"
+  subnetwork   = google_compute_subnetwork.k3s_subnet.id
   address_type = "INTERNAL"
   address      = "10.0.0.11"
   region       = var.gcp_region
 }
 
-resource "google_compute_address" "rke_external_address01" {
-  name   = "rke-external-address01"
+resource "google_compute_address" "k3s_external_address01" {
+  name   = "k3s-external-address01"
   region = var.gcp_region
 }
 
 # ********** WARNING **********
 # Firewall Rule to allow all traffic
-resource "google_compute_firewall" "rke_fw_allowall" {
-  name    = "${var.prefix}rke-allowall"
-  network = google_compute_network.rke_network.id
+resource "google_compute_firewall" "k3s_fw_allowall" {
+  name    = "${var.prefix}k3s-allowall"
+  network = google_compute_network.k3s_network.id
 
   allow {
     protocol = "all"
@@ -74,8 +74,8 @@ resource "google_compute_firewall" "rke_fw_allowall" {
 }
 
 # disk: admin by google
-resource "google_compute_disk" "rke_master_disk01" {
-  name  = "master-disk01"
+resource "google_compute_disk" "k3s_master_disk01" {
+  name  = "k3s-master-disk01"
   image = data.google_compute_image.rke_master_image.self_link
   size  = 10
   type  = "pd-standard"
@@ -85,9 +85,9 @@ resource "google_compute_disk" "rke_master_disk01" {
   }
 }
 
-# GCP Compute Instance for creating a single node RKE cluster and installing the Rancher server
-resource "google_compute_instance" "rke_master01" {
-  depends_on = [google_compute_firewall.rke_fw_allowall]
+# GCP Compute Instance for creating a single node k3s cluster and installing the Rancher server
+resource "google_compute_instance" "k3s_master01" {
+  depends_on = [google_compute_firewall.k3s_fw_allowall]
 
   name         = "${var.prefix}master01"
   machine_type = var.machine_type
@@ -98,17 +98,17 @@ resource "google_compute_instance" "rke_master01" {
   }
 
   boot_disk {
-    source      = google_compute_disk.rke_master_disk01.id # "master-disk-db01"
+    source      = google_compute_disk.k3s_master_disk01.id # "master-disk-db01"
     auto_delete = false
   }
 
   network_interface {
-    network    = google_compute_network.rke_network.id
-    subnetwork = google_compute_subnetwork.rke_subnet.id
-    network_ip = google_compute_address.rke_internal_address01.address
+    network    = google_compute_network.k3s_network.id
+    subnetwork = google_compute_subnetwork.k3s_subnet.id
+    network_ip = google_compute_address.k3s_internal_address01.address
 
     access_config {
-      nat_ip = google_compute_address.rke_external_address01.address
+      nat_ip = google_compute_address.k3s_external_address01.address
       # "35.238.114.204"
     }
   }
@@ -125,20 +125,68 @@ resource "google_compute_instance" "rke_master01" {
       # using providers (uncomment below module)
       # join("/", [path.module, "userdata_rancher_server.template"]),
       # using script
-      join("/", [path.module, "rke_master01_script.template"]),
+      join("/", [path.module, "k3s_master01_script.template"]),
       {
         docker_version = var.docker_version
         username       = local.node_username
-        # node_internal_ip = google_compute_address.rke_internal_address01.address
-        node_public_ip = google_compute_address.rke_external_address01.address
+        # node_internal_ip = google_compute_address.k3s_internal_address01.address
+        node_public_ip = google_compute_address.k3s_external_address01.address
       }
     )
   }
 
-  # rke config file
+	# k8's files
   provisioner "file" {
-    source      = "${path.module}/rancher-cluster.yml"
-    destination = "/home/${local.node_username}/rancher-cluster.yml"
+    source      = "../../../../app/deployment.yaml"
+    destination = "/home/${local.node_username}/deployment.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "../../../../app/clusterIP.yaml"
+    destination = "/home/${local.node_username}/clusterIP.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "../../../../app/ingress.yaml"
+    destination = "/home/${local.node_username}/ingress.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "../../../../app/production_clusterIssuer.yaml"
+    destination = "/home/${local.node_username}/production_clusterIssuer.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "../../../../app/staging_clusterIssuer.yaml"
+    destination = "/home/${local.node_username}/staging_clusterIssuer.yaml"
 
     connection {
       type        = "ssh"
@@ -181,16 +229,16 @@ resource "google_compute_instance" "rke_master01" {
 # module "rancher_common" {
 #   source = "../rancher_common"
 
-#   node_public_ip         = google_compute_instance.rke_master01.network_interface.0.access_config.0.nat_ip
-#   node_internal_ip       = google_compute_instance.rke_master01.network_interface.0.network_ip
+#   node_public_ip         = google_compute_instance.k3s_master01.network_interface.0.access_config.0.nat_ip
+#   node_internal_ip       = google_compute_instance.k3s_master01.network_interface.0.network_ip
 #   node_username          = local.node_username
 #   ssh_private_key_pem    = tls_private_key.global_key.private_key_pem
-#   rke_kubernetes_version = var.rke_kubernetes_version
+#   k3s_kubernetes_version = var.k3s_kubernetes_version
 
 #   cert_manager_version = var.cert_manager_version
 #   rancher_version      = var.rancher_version
 
-#   rancher_server_dns = join(".", ["rancher", google_compute_instance.rke_master01.network_interface.0.access_config.0.nat_ip, "xip.io"])
+#   rancher_server_dns = join(".", ["rancher", google_compute_instance.k3s_master01.network_interface.0.access_config.0.nat_ip, "xip.io"])
 #   admin_password     = var.rancher_server_admin_password
 
 #   workload_kubernetes_version = var.workload_kubernetes_version

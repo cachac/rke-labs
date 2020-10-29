@@ -1,8 +1,12 @@
 #!/bin/bash -x
-date '+%Y/%m/%d %H:%M:%S' > /home/${username}/ilog
+export TZ="America/Costa_Rica"
+date +%z
+date '+%Y/%m/%d %H:%M:%S %z' > /home/${username}/ilog
 SECONDS=0
 export DEBIAN_FRONTEND=noninteractive
 # root
+# gcloud config set account  birdscodeinfo@gmail.com
+# gcloud auth activate-service-account --key-file /home/${username}/key.json
 sudo usermod -aG sudo ${username}
 echo -e "password\npassword\n" | passwd ${username}
 # docker
@@ -26,7 +30,8 @@ then
 		echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
 		echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
 		echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
-		# complete -F __start_kubectl k
+		runuser -l ${username} -c  'complete -F __start_kubectl k'
+
 		echo 'Kubectl installed!' >> /home/${username}/ilog
 else echo 'Kubectl already installed!' >> /home/${username}/ilog
 fi

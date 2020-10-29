@@ -10,22 +10,22 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission   = "0600"
 }
 # Networking
-resource "google_compute_address" "k3s_internal_address_worker01" {
-  name         = "k3s-internal-address-worker21"
+resource "google_compute_address" "k3s_internal_address_worker02" {
+  name         = "k3s-internal-address-worker22"
   subnetwork   = "k3s-subnet"
   address_type = "INTERNAL"
-  address      = "10.0.0.21"
+  address      = "10.0.0.22"
   region       = var.gcp_region
 }
 
-resource "google_compute_address" "k3s_external_address_worker01" {
-  name   = "k3s-external-address-worker01"
+resource "google_compute_address" "k3s_external_address_worker02" {
+  name   = "k3s-external-address-worker02"
   region = var.gcp_region
 }
 
 # disk: admin by google
-resource "google_compute_disk" "k3s_worker_disk01" {
-  name  = "k3s-worker-disk01"
+resource "google_compute_disk" "k3s_worker_disk02" {
+  name  = "k3s-worker-disk02"
   image = data.google_compute_image.rke_master_image.self_link
   size  = 10
   type  = "pd-standard"
@@ -36,8 +36,8 @@ resource "google_compute_disk" "k3s_worker_disk01" {
 }
 
 # GCP Compute Instance for creating a single node k3s cluster and installing the Rancher server
-resource "google_compute_instance" "k3s_worker01" {
-  name         = "${var.prefix}worker01"
+resource "google_compute_instance" "k3s_worker02" {
+  name         = "${var.prefix}worker02"
   machine_type = var.machine_type
   zone         = var.gcp_zone
   tags         = ["terraform"]
@@ -46,17 +46,17 @@ resource "google_compute_instance" "k3s_worker01" {
   }
 
   boot_disk {
-    source      = google_compute_disk.k3s_worker_disk01.id # "worker-disk-db01"
+    source      = google_compute_disk.k3s_worker_disk02.id # "worker-disk-db02"
     auto_delete = false
   }
 
   network_interface {
     network    = "k3s-network"
     subnetwork = "k3s-subnet"
-    network_ip = google_compute_address.k3s_internal_address_worker01.address
+    network_ip = google_compute_address.k3s_internal_address_worker02.address
 
     access_config {
-      nat_ip = google_compute_address.k3s_external_address_worker01.address
+      nat_ip = google_compute_address.k3s_external_address_worker02.address
       # "35.238.114.204"
     }
   }
@@ -73,12 +73,12 @@ resource "google_compute_instance" "k3s_worker01" {
       # using providers (uncomment below module)
       # join("/", [path.module, "userdata_rancher_server.template"]),
       # using script
-      join("/", [path.module, "k3s_worker01_script.template"]),
+      join("/", [path.module, "k3s_worker02_script.template"]),
       {
         docker_version = var.docker_version
         username       = local.node_username
-        # node_internal_ip = google_compute_address.k3s_internal_address01.ad_workerdress
-        node_public_ip = google_compute_address.k3s_external_address_worker01.address
+        # node_internal_ip = google_compute_address.k3s_internal_address02.ad_workerdress
+        node_public_ip = google_compute_address.k3s_external_address_worker02.address
       }
     )
   }
@@ -177,8 +177,8 @@ resource "google_compute_instance" "k3s_worker01" {
 # module "rancher_common" {
 #   source = "../rancher_common"
 
-#   node_public_ip         = google_compute_instance.k3s_worker01.network_interface.0.access_config.0.nat_ip
-#   node_internal_ip       = google_compute_instance.k3s_worker01.network_interface.0.network_ip
+#   node_public_ip         = google_compute_instance.k3s_worker02.network_interface.0.access_config.0.nat_ip
+#   node_internal_ip       = google_compute_instance.k3s_worker02.network_interface.0.network_ip
 #   node_username          = local.node_username
 #   ssh_private_key_pem    = tls_private_key.global_key.private_key_pem
 #   k3s_kubernetes_version = var.k3s_kubernetes_version
@@ -186,7 +186,7 @@ resource "google_compute_instance" "k3s_worker01" {
 #   cert_manager_version = var.cert_manager_version
 #   rancher_version      = var.rancher_version
 
-#   rancher_server_dns = join(".", ["rancher", google_compute_instance.k3s_worker01.network_interface.0.access_config.0.nat_ip, "xip.io"])
+#   rancher_server_dns = join(".", ["rancher", google_compute_instance.k3s_worker02.network_interface.0.access_config.0.nat_ip, "xip.io"])
 #   admin_password     = var.rancher_server_admin_password
 
 #   workload_kubernetes_version = var.workload_kubernetes_version

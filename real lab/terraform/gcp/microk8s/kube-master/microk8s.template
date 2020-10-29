@@ -34,16 +34,17 @@ if ! command -v microk8s &> /dev/null; then
 	sudo sh -c 'echo "--allow-privileged=true" >> /var/snap/microk8s/current/args/kube-apiserver'
   sudo systemctl restart snap.microk8s.daemon-apiserver.service
 
-	runuser -l ${username} -c  "kubectl apply -f https://k8s.io/examples/application/deployment.yaml"
-	runuser -l ${username} -c  "kubectl expose deployment nginx-deployment --port 80"
-
-	runuser -l ${username} -c  "kubectl create namespace cert-manager"
-	runuser -l ${username} -c  "kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml"
-
 	echo "[ -f ~/.kubectl_aliases ] && source <(cat ~/.kubectl_aliases | sed -r 's/(kubectl.*) --watch/watch \1/g')" >> /home/${username}/.bashrc
 	echo 'function kubectl() { echo "+ kubectl $@">&2; command kubectl $@; }' >> /home/${username}/.bashrc
 	echo "source <(kubectl completion bash)" >> /home/${username}/.bashrc
 	runuser -l ${username} -c  'complete -F __start_kubectl k'
+
+	# cert manager
+	runuser -l ${username} -c "kubectl create namespace cert-manager"
+	runuser -l ${username} -c "kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml"
+	sleep 30
+	runuser -l ${username} -c "kubectl apply -f staging_clusterIssuer.yaml"
+	runuser -l ${username} -c "kubectl apply -f production_clusterIssuer.yaml"
 
 	# Setup and install Tiller (part of Helm)
 	sudo microk8s.kubectl create serviceaccount tiller --namespace kube-system
@@ -51,14 +52,12 @@ if ! command -v microk8s &> /dev/null; then
 	sudo microk8s.helm init --service-account=tiller
 
 
-	# cert manager
-	runuser -l ${username} -c "kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml"
-	sleep 30
-	runuser -l ${username} -c "kubectl apply -f staging_clusterIssuer.yaml"
-	runuser -l ${username} -c "kubectl apply -f production_clusterIssuer.yaml"
-
-	# Install cert-manager user by Rancher
-	sudo microk8s.kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
+	# Install cert-manager (Option 2) user by Rancher
+	# sudo microk8s.helm repo add jetstack https://charts.jetstack.io
+	# sudo microk8s.kubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.9/deploy/manifests/00-crds.yaml
+	# sudo microk8s.kubectl create namespace cert-manager
+	# sudo microk8s.kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
+	# sudo microk8s.helm install --name cert-manager --namespace cert-manager --version v0.9.1 jetstack/cert-manager
 
 	# Install stable Rancher
  	sudo microk8s.helm repo add rancher-stable https://releases.rancher.com/server-charts/stable

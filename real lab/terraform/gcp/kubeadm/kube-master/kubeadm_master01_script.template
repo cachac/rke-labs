@@ -60,12 +60,12 @@ sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 # sudo firewall-cmd --reloaddate '+%Y/%m/%d %H:%M:%S' > /home/${username}/ilog
 #
 # ip tables
-#
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 EOF
 sudo sysctl --system
+#
 
 sudo modprobe br_netfilter
 sudo sh -c "echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables"

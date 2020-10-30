@@ -109,7 +109,7 @@ resource "google_compute_instance" "k3s_worker01" {
   }
 
   provisioner "file" {
-    source      = "../../../../app/ingress.yaml"
+    source      = "../../../../app/ingressBetaTraefik.yaml"
     destination = "/home/${local.node_username}/ingress.yaml"
 
     connection {

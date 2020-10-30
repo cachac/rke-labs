@@ -38,8 +38,13 @@ fi
 # k3s
 if ! command -v k3s &> /dev/null
 then
-    # curl -sfL https://get.k3s.io  | sh -
-		curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --no-deploy traefik" sh
+    curl -sfL https://get.k3s.io  | sh -
+		# curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --no-deploy traefik" sh
+		# INSTALL_K3S_EXEC="--flannel-backend=none --cluster-cidr=192.168.0.0/16" sh -
+
+		# worker nodes
+		# server: /var/lib/rancher/k3s/server/node-token
+		# curl -sfL https://get.k3s.io | K3S_URL=https://storylabs.tk:6443 K3S_TOKEN=mynodetoken sh -
 		echo 'K3S installed!' >> /home/${username}/ilog
 		# config
 		# config bashrc
@@ -51,7 +56,7 @@ else echo 'K3S already installed!' >> /home/${username}/ilog
 fi
 
 #
-# ingress controller  *** using default Traefik***
+# ingress controller  *** using default Traefik ***
 #
 # apt install git
 # runuser -l ${username} -c "git clone https://github.com/nginxinc/kubernetes-ingress/"

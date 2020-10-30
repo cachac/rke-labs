@@ -38,33 +38,34 @@ fi
 # k3s
 if ! command -v k3s &> /dev/null
 then
-    curl -sfL https://get.k3s.io | sh -
+    # curl -sfL https://get.k3s.io  | sh -
+		curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --no-deploy traefik" sh
 		echo 'K3S installed!' >> /home/${username}/ilog
 		# config
 		# config bashrc
-		mkdir .kube
-		cp /etc/rancher/k3s/k3s.yaml .kube/
-		chown ${username}:${username} ./kube
+		mkdir /home/${username}/.kube
+		cp /etc/rancher/k3s/k3s.yaml /home/${username}/.kube
+		chown ${username}:${username} /home/${username}/.kube/*
 		echo 'export KUBECONFIG=$(pwd)/.kube/k3s.yaml' >> /home/${username}/.bashrc
 else echo 'K3S already installed!' >> /home/${username}/ilog
 fi
 
 #
-# ingress controller
+# ingress controller  *** using default Traefik***
 #
-apt install git
-git clone https://github.com/nginxinc/kubernetes-ingress/
-cd kubernetes-ingress/deployments
-git checkout v1.9.0
-# sa - rbac - secrets - cm - deploy
-runuser -l ${username} -c "sudo kubectl apply -f common/ns-and-sa.yaml"
-runuser -l ${username} -c "sudo kubectl apply -f rbac/rbac.yaml"
-runuser -l ${username} -c "sudo kubectl apply -f common/default-server-secret.yaml"
-runuser -l ${username} -c "sudo kubectl apply -f common/nginx-config.yaml"
-runuser -l ${username} -c "sudo kubectl apply -f common/ingress-class.yaml"
-runuser -l ${username} -c "sudo kubectl apply -f daemon-set/nginx-ingress.yaml"
-# node port
-runuser -l ${username} -c "sudo kubectl create -f service/nodeport.yaml"
+# apt install git
+# runuser -l ${username} -c "git clone https://github.com/nginxinc/kubernetes-ingress/"
+# runuser -l ${username} -c "cd kubernetes-ingress/deployments"
+# runuser -l ${username} -c "git checkout v1.9.0"
+# # sa - rbac - secrets - cm - deploy
+# runuser -l ${username} -c "kubectl apply -f common/ns-and-sa.yaml"
+# runuser -l ${username} -c "kubectl apply -f rbac/rbac.yaml"
+# runuser -l ${username} -c "kubectl apply -f common/default-server-secret.yaml"
+# runuser -l ${username} -c "kubectl apply -f common/nginx-config.yaml"
+# runuser -l ${username} -c "kubectl apply -f common/ingress-class.yaml"
+# runuser -l ${username} -c "kubectl apply -f daemon-set/nginx-ingress.yaml"
+# # node port
+# runuser -l ${username} -c "kubectl create -f service/nodeport.yaml"
 
 
 # cert manager

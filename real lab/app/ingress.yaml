@@ -17,7 +17,7 @@ metadata:
 spec:
   # ingressClassName: nginx
   rules:
-  - host: ranchertest.tk
+  - host: storylabs.tk
     http:
       paths:
       - path: /
@@ -27,7 +27,7 @@ spec:
             name: kube-verify
             port:
               number: 80
-  - host: www.ranchertest.tk
+  - host: www.storylabs.tk
     http:
       paths:
       - path: /
@@ -41,7 +41,7 @@ spec:
 
   tls:
   - hosts:
-      - ranchertest.tk
-      - www.ranchertest.tk
-    secretName: ranchertest-tk-tls # < cert-manager will store the created certificate in this secret.
+      - storylabs.tk
+      - www.storylabs.tk
+    secretName: storylabs-tk-tls # < cert-manager will store the created certificate in this secret.
 

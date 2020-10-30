@@ -3,23 +3,28 @@ kind: Ingress
 metadata:
   name: default-ingress
   annotations:
-    kubernetes.io/ingress.class: "nginx"
+    # using nginx:
+    # kubernetes.io/ingress.class: "nginx"
     # Add the following line (staging first for testing, then apply the prod issuer)
     cert-manager.io/cluster-issuer: "letsencrypt-staging" # "letsencrypt-prod"
 spec:
   tls:
   - hosts:
-    - ranchertest.tk
-    secretName: default-tls-secret
+    - storylabs.tk
+    secretName: storylabs-tk-tls
   rules:
-  - host: ranchertest.tk
+  - host: storylabs.tk
     http:
       paths:
       - path: /
         backend:
-          serviceName: nginx-deployment
+          serviceName: kube-verify
           servicePort: 80
-      - path: /hello
+  - host: www.storylabs.tk
+    http:
+      paths:
+      - path: /
         backend:
-          serviceName: hello-deployment
+          serviceName: kube-verify
           servicePort: 80
+

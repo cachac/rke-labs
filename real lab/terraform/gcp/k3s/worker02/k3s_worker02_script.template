@@ -36,18 +36,12 @@ echo -e "password\npassword\n" | passwd ${username}
 # else echo 'Kubectl already installed!' >> /home/${username}/ilog
 # fi
 # k3s
-# if ! command -v k3s &> /dev/null
-# then
-#     curl -sfL https://get.k3s.io | sh -
-# 		echo 'K3S installed!' >> /home/${username}/ilog
-# 		# config
-# 		# config bashrc
-# 		mkdir .kube
-# 		cp /etc/rancher/k3s/k3s.yaml .kube/
-# 		chown ${username}:${username} ./kube
-# 		echo 'export KUBECONFIG=$(pwd)/.kube/k3s.yaml' >> /home/${username}/.bashrc
-# else echo 'K3S already installed!' >> /home/${username}/ilog
-# fi
+if ! command -v k3s &> /dev/null
+then
+    curl -sfL https://get.k3s.io | K3S_URL=https://k3s-worker01:6443 K3S_TOKEN=mynodetoken sh -
+		echo 'K3S installed!' >> /home/${username}/ilog
+else echo 'K3S already installed!' >> /home/${username}/ilog
+fi
 
 # end
 duration=$SECONDS

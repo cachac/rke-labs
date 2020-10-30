@@ -112,19 +112,19 @@ runuser -l ${username} -c "echo 'export KUBECONFIG=/home/${username}/.kube/confi
 #
 # ingress controller
 #
+apt install git
 git clone https://github.com/nginxinc/kubernetes-ingress/
 cd kubernetes-ingress/deployments
 git checkout v1.9.0
 # sa - rbac - secrets - cm - deploy
-kubectl apply -f common/ns-and-sa.yaml
-kubectl apply -f rbac/rbac.yaml
-kubectl apply -f common/default-server-secret.yaml
-kubectl apply -f common/nginx-config.yaml
-kubectl apply -f common/ingress-class.yaml
-kubectl apply -f daemon-set/nginx-ingress.yaml
-
+runuser -l ${username} -c "sudo kubectl apply -f common/ns-and-sa.yaml"
+runuser -l ${username} -c "sudo kubectl apply -f rbac/rbac.yaml"
+runuser -l ${username} -c "sudo kubectl apply -f common/default-server-secret.yaml"
+runuser -l ${username} -c "sudo kubectl apply -f common/nginx-config.yaml"
+runuser -l ${username} -c "sudo kubectl apply -f common/ingress-class.yaml"
+runuser -l ${username} -c "sudo kubectl apply -f daemon-set/nginx-ingress.yaml"
 # node port
-kubectl create -f service/nodeport.yaml
+runuser -l ${username} -c "sudo kubectl create -f service/nodeport.yaml"
 
 
 #

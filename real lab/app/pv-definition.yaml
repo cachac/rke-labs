@@ -1,11 +1,19 @@
 apiVersion: v1
-kind: PersistentVolumne
+kind: PersistentVolume
 metadata:
   name: pv-vol1
 spec:
+  persistentVolumeReclaimPolicy: Retain
+  # storageClassName: "google-storage"
+  # claimRef:
+      # name: my-claim
+      # namespace: foo
   accessModes:
     - ReadWriteOnce
   capacity:
     storage: 1Gi
-  hostPath: # local storage
-    path: /tmp/data
+  # hostPath: # local storage
+  #   path: /tmp/data
+  gcePersistentDisk:
+    pdName: pd-disk
+    fsType: ext4

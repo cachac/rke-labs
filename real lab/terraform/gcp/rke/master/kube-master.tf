@@ -135,6 +135,67 @@ resource "google_compute_instance" "rke_master01" {
     )
   }
 
+  # k8's files
+  provisioner "file" {
+    source      = "../../../../app/deployment.yaml"
+    destination = "/home/${local.node_username}/deployment.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "../../../../app/clusterIP.yaml"
+    destination = "/home/${local.node_username}/clusterIP.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "../../../../app/ingress.yaml"
+    destination = "/home/${local.node_username}/ingress.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "../../../../app/production_clusterIssuer.yaml"
+    destination = "/home/${local.node_username}/production_clusterIssuer.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
+  provisioner "file" {
+    source      = "../../../../app/staging_clusterIssuer.yaml"
+    destination = "/home/${local.node_username}/staging_clusterIssuer.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = self.network_interface.0.access_config.0.nat_ip
+      user        = local.node_username
+      private_key = tls_private_key.global_key.private_key_pem
+    }
+  }
+
   # rke config file
   provisioner "file" {
     source      = "${path.module}/rancher-cluster.yml"

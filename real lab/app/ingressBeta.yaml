@@ -29,4 +29,5 @@ spec:
   tls:
   - hosts:
     - storylabs.tk
+    - www.storylabs.tk
     secretName: storylabs-tk-tls

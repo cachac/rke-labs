@@ -161,7 +161,7 @@ resource "google_compute_instance" "rke_master01" {
   }
 
   provisioner "file" {
-    source      = "../../../../app/ingress.yaml"
+    source      = "../../../../app/ingressBeta.yaml"
     destination = "/home/${local.node_username}/ingress.yaml"
 
     connection {

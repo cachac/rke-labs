@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-express
+  labels:
+    app: web
+    name: mongo-express
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+      name: mongo-express
+  template:
+    metadata:
+      labels:
+        app: web
+        name: mongo-express
+    spec:
+      containers:
+      - name: mongo-express
+        image: mongo-express
+        env:
+        - name: ME_CONFIG_MONGODB_SERVER
+          value: mongodb://mongodb-storylabs-0.mongodb-svc,mongodb-storylabs-1.mongodb-svc,mongodb-storylabs-2.mongodb-svc?replicaSet=rs0
+
+        ports:
+          - containerPort: 8081
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-express-svc
+spec:
+  type: NodePort
+  ports:
+    - targetPort: 8081 # pod port
+      port: 80 # service port
+      nodePort: 30080
+  selector: # labels of pod
+    app: web
+    name: mongo-express
+

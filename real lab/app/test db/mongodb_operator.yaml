@@ -1,0 +1,69 @@
+apiVersion: mongodb.com/v1
+kind: MongoDB
+metadata:
+  name: storylabs
+spec:
+  members: 3
+  type: ReplicaSet
+  version: "4.2.6"
+  security:
+    authentication:
+      modes: ["SCRAM"]
+    # tls:
+    #   enabled: true
+    # connectivity:
+    #   replicaSetHorizons:
+    #     - "storylabs-mongodb": "member1.storylabs.tk:30907"
+    #     - "storylabs-mongodb": "member2.storylabs.tk:32350"
+    #     - "storylabs-mongodb": "member3.storylabs.tk:31185"
+  users:
+    - name: mongodb-admin
+      db: admin
+      passwordSecretRef: # a reference to the secret that will be used to generate the user's password
+        name: admin-ref
+      roles:
+        - name: clusterAdmin
+          db: admin
+        - name: userAdminAnyDatabase
+          db: admin
+      scramCredentialsSecretName: my-scram
+  persistent: true
+  podSpec:
+    cpuRequests: 100m
+    cpu: 2000m #limit
+    memoryRequests: 500M #limit
+    memory: 1Gi
+    # persistence:
+    #   # single: Has Kubernetes Operator create one Persistent Volume Claim and mount all three directories for data, journal, and logs to the same Persistent Volume.
+    #   single:  # https://docs.mongodb.com/kubernetes-operator/master/reference/k8s-operator-specification/#spec.podSpec.persistence.single
+    #     storage: 10Gi
+    #     storageClass: local-storage #Make sure to set the StorageClass reclaimPolicy to Retain. This ensures that data is retained when a Persistent Volume Claim is removed.
+    #     labelSelector:
+    #       matchLabels:
+    #         storage: "persistent-mongodb"
+    persistence:
+      multiple:
+        data:
+          storage: 7Gi
+          # labelSelector:
+          #   matchLabels:
+          #     app: "mongodb"
+          storageClass: "local-storage"
+        # journal:
+        #   storage: 1Gi
+        #   labelSelector:
+        #     matchLabels:
+        #       app: "mongodb"
+        # logs:
+        #   storage: 500M
+        #   storageClassName: "local-storage"
+---
+# the user credentials will be generated from this secret
+# once the credentials are generated, this secret is no longer required
+apiVersion: v1
+kind: Secret
+metadata:
+  name: admin-ref
+type: Opaque
+stringData:
+  password: password

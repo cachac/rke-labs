@@ -4,16 +4,16 @@ metadata:
   name: pv-vol1
 spec:
   persistentVolumeReclaimPolicy: Retain
-  # storageClassName: "google-storage"
+  storageClassName: local-storage
   # claimRef:
       # name: my-claim
       # namespace: foo
   accessModes:
     - ReadWriteOnce
   capacity:
-    storage: 1Gi
+    storage: 10Gi
   # hostPath: # local storage
   #   path: /tmp/data
   gcePersistentDisk:
-    pdName: pd-disk
+    pdName: bucket-disk
     fsType: ext4

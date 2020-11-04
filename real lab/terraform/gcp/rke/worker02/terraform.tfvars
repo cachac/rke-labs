@@ -19,15 +19,15 @@ rancher_server_admin_password = "wincyre11"
 gcp_region = "us-central1"
 
 # GCP zone for all resources
-gcp_zone = "us-central1-c"
+gcp_zone = "us-central1-a"
 
 # Prefix for all resources created by quickstart
 prefix = "rke-"
 
 # Compute instance size of all created instances
-machine_type = "e2-standard-2"
+# machine_type = "e2-standard-2"
 # machine_type = "e2-medium"
-# machine_type = "e2-small"
+machine_type = "e2-small"
 
 # Docker version installed on target hosts
 # - Must be a version supported by the Rancher install scripts

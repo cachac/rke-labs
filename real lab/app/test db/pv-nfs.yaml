@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-nfs-mongodb-01
+  labels:
+    type: local
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: rke-master01
+    path: "/mnt/disks/disk-app01"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-nfs-mongodb-02
+  labels:
+    type: local
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: rke-master01
+    path: "/mnt/disks/disk-app02"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-nfs-mongodb-03
+  labels:
+    type: local
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: rke-master01
+    path: "/mnt/disks/disk-app03"
+---

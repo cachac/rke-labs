@@ -19,7 +19,7 @@ rancher_server_admin_password = "wincyre11"
 gcp_region = "us-central1"
 
 # GCP zone for all resources
-gcp_zone = "us-central1-c"
+gcp_zone = "us-central1-a"
 
 # Prefix for all resources created by quickstart
 prefix = "rke-"

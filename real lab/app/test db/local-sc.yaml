@@ -1,0 +1,66 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+# Supported policies: Delete, Retain
+reclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-storage0
+  # labels:
+    # storage: "persistent-mongodb"
+    # app: "mongodb"
+spec:
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  # claimRef:
+  #     name: default/local-vol-helloapp-0
+  #     namespace: foo
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+  volumeMode: Block # Filesystem
+
+  gcePersistentDisk:
+    pdName: bucket-disk
+    fsType: ext4
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - rke-master01
+          - rke-worker01
+---
+#  ejemplo nodeAffinity
+
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: example-pv
+# spec:
+#   capacity:
+#     storage: 20Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#   - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Delete
+#   storageClassName: local-storage
+#   local:
+#     path: /mnt/disks/ssd1
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: kubernetes.io/hostname
+#           operator: In
+#           values:
+#           - rke-master01
+#             rke-worker01

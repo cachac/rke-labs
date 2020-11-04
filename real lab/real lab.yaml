@@ -217,3 +217,67 @@ ka app/clusterIP.yaml
 
 curl -I <klab.ranchertest.tk>
 status 200 !!!!!!!!!!!!
+
+
+#
+# nfs
+#
+apt install nfs-kernel-server
+sudo apt update
+sudo apt install nfs-common
+sudo systemctl start nfs-server
+
+sudo nano /etc/exports
+ =
+ /mnt/disks              *(rw,no_root_squash,sync,no_subtree_check,insecure)
+
+
+# *** montar discos externos ***
+
+# share
+
+# create dirs if needed
+sudo mkdir -p /mnt/disks
+sudo mkdir -p /mnt/disks/{pv0,pv1,pv2,pv3,pv4}
+#
+sudo chmod 777 /mnt/disks/*/*
+sudo exportfs -rav
+  # =
+  # exporting *:/mnt/disks
+
+# test
+sudo exportfs -v
+showmount -e
+
+# client
+sudo apt install nfs-common -y
+sudo mount -t nfs rke-master01:/mnt/disks /mnt
+showmount -e rke-master01
+
+#
+# mongodb operator  if needed
+#
+git clone https://github.com/mongodb/mongodb-kubernetes-operator.git
+kubectl create -f mongodb-kubernetes-operator/deploy/crds/mongodb.com_mongodb_crd.yaml
+kubectl get crd/mongodb.mongodb.com
+kubectl create -f mongodb-kubernetes-operator/deploy/
+
+# mongodb statefulset
+# ka mongodb-rs.yaml
+
+# test
+kubectl get pods
+kubectl describe endpoints mongodb-svc
+
+# rs
+rs.initiate({_id: "rs0", version: 1, members: [
+  { _id: 0, host : "mongodb-storylabs-0.mongodb-svc.default.svc.cluster.local:27017" },
+  { _id: 1, host : "mongodb-storylabs-1.mongodb-svc.default.svc.cluster.local:27017" },
+  { _id: 2, host : "mongodb-storylabs-2.mongodb-svc.default.svc.cluster.local:27017" }
+]});
+
+
+# nodeport
+kubectl expose pod/mongodb-storylabs-0 --type="NodePort" --port 27017
+kubectl expose pod/mongodb-storylabs-1 --type="NodePort" --port 27017
+kubectl expose pod/mongodb-storylabs-2 --type="NodePort" --port 27017

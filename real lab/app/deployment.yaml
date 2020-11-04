@@ -22,17 +22,25 @@ spec:
             - containerPort: 8080
           readinessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: 8080
             initialDelaySeconds: 5
-            periodSeconds: 10
+            periodSeconds: 5
             # tcpSocket:
             #   port: 80
           livenessProbe:
-            tcpSocket:
+            # tcpSocket:
+            #   port: 8080
+            # initialDelaySeconds: 15
+            # periodSeconds: 20
+            httpGet:
+              path: /healthz
               port: 8080
-            initialDelaySeconds: 15
-            periodSeconds: 20
+              httpHeaders:
+              - name: Custom-Header
+                value: Awesome
+            initialDelaySeconds: 3
+            periodSeconds: 3
           # limits
           resources:
             requests:

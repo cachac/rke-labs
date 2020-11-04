@@ -1,18 +1,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  name: kube-verify-ingress
+  # namespace: kube-verify
   annotations:
     # To use ingress controller, add the kubernetes.io/ingress.class: nginx annotation to your Ingress resources.
     kubernetes.io/ingress.class: nginx
     # add an annotation indicating the issuer to use.
     # cert-manager.io/issuer: "letsencrypt-staging"
 
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # cert-manager.io/cluster-issuer: "letsencrypt-staging"
     nginx.ingress.kubernetes.io/rewrite-target: /
-
-  name: kube-verify-ingress
-  # namespace: kube-verify
 
 spec:
   # ingressClassName: nginx

@@ -1,0 +1,29 @@
+# https://medium.com/@vladroff/mongodb-ssl-auth-on-kubernetes-ee14bf1a744f
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-mongo-config
+  namespace: default
+data:
+  mongod.conf: |
+    security:
+      authorization: enabled
+    storage:
+      dbPath: /data/db
+    net:
+      tls:
+        mode: requireTLS
+        CAFile: /etc/ssl/root-ca.pem
+        certificateKeyFile: /etc/ssl/mongodb.pem
+        allowConnectionsWithoutCertificates: true
+    replication:
+      replSetName: rs0
+# ---
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: my-mongo-ssl-certs
+# type: Opaque
+# data:
+#   root-ca.pem: <base64 encoded root-ca.pem>
+#   mongodb.pem: <base64 encoded mongodb.pem>

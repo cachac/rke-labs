@@ -33,15 +33,27 @@ spec:
         name: mongodb
     spec:
       terminationGracePeriodSeconds: 10 #This is important for databases
+      volumes:
+        - name: my-mongo-config
+          configMap:
+            name: my-mongo-config
+        - name: my-mongo-ssl-certs
+          secret:
+            secretName: my-mongo-ssl-certs
       containers:
       - name: mongo
         image: mongo # :4.2
+        imagePullPolicy: IfNotPresent
         command: #https://docs.mongodb.com/manual/tutorial/deploy-replica-set/#start-each-member-of-the-replica-set-with-the-appropriate-options
           - mongod
         args:
-          - --bind_ip=0.0.0.0
-          - --replSet=rs0 #The name of the replica set that the mongod is part of. All hosts in the replica set must have the same set name.
-          - --dbpath=/data/db
+          # - --bind_ip=0.0.0.0
+          # - --replSet=rs0 #The name of the replica set that the mongod is part of. All hosts in the replica set must have the same set name.
+          # - --dbpath=/data/db
+          # - --auth
+          - --config
+          - /etc/mongo/mongod.conf
+
         livenessProbe:
             exec:
               command:
@@ -53,6 +65,10 @@ spec:
         volumeMounts:
         - name: mongo-storage
           mountPath: /data/db
+        - name: my-mongo-config
+          mountPath: /etc/mongo
+        - name: my-mongo-ssl-certs
+          mountPath: /etc/ssl
   volumeClaimTemplates:
     - metadata:
         name: mongo-storage

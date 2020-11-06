@@ -1,5 +1,5 @@
 nodes:
-  - address: rke-master01
+  - address: 35.194.18.150 # publica
     internal_address: 10.0.0.11
     user: cachac6
     role: [controlplane, worker, etcd]
@@ -11,10 +11,10 @@ nodes:
     internal_address: 10.0.0.21
     user: cachac6
     role: [worker]
-  # - address: rke-worker02
-  #   internal_address: 10.0.0.22
-  #   user: cachac6
-  #   role: [worker]
+  - address: rke-worker02
+    internal_address: 10.0.0.22
+    user: cachac6
+    role: [worker]
 services:
   etcd:
     snapshot: true

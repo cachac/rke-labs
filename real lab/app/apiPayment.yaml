@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-payment
+  namespace: apps
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-payment
+  template:
+    metadata:
+      labels:
+        app: api-payment
+    spec:
+      containers:
+        - name: api-payment
+          image: docker.pkg.github.com/cachac/apipayment/apipayment-qa:latest
+          ports:
+            - containerPort: 5030
+          readinessProbe:
+            httpGet:
+              path: /health-check
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /health-check
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 2
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "0.1"
+            limits:
+              memory: "300Mi"
+              cpu: "0.9"
+      # dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: regcred

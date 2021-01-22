@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: operfe-ingress
+  namespace: operfe
+  annotations:
+    # using nginx:
+    kubernetes.io/ingress.class: "nginx"
+    # Add the following line (staging first for testing, then apply the prod issuer)
+    # cert-manager.io/cluster-issuer: "letsencrypt-staging" # "letsencrypt-prod"
+    #cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+
+spec:
+  rules:
+  - host: dev-operfe.ice.go.cr
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: operfe-frontend
+          servicePort: 80
+  tls:
+  - hosts:
+    - dev-operfe.ice.go.cr
+    secretName: cer-icegocr

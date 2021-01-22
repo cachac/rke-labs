@@ -9,7 +9,7 @@
 # create service account:
 # https://console.cloud.google.com/iam-admin/serviceaccounts?project=kubernetes-292714
 # create key using gcloud:
-#gcloud iam service-accounts keys create ~/key.json \
+# cloud iam service-accounts keys create ~/key.json \
 #  --iam-account terraform-bot@kubernetes-292714.iam.gserviceaccount.com
 # find key in ~/key.json
 # export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
